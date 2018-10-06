@@ -46,19 +46,25 @@ head(crime)
 # Data wrangling
 ## Census Data
 We need to find "age; percentage of study population that was male, White, Black, Hispanic, unemployed, and college educated; and population density at the state level" using the census data.
+
 The following is taken from the document sc-est2017-alldata6.pdf:
-* The key for SEX is as follows: 0 = Total
-  + 1 = Male
-  + 2 = Female
-* The key for ORIGIN is as follows: 0 = Total
-  + 1 = Not Hispanic
-  + 2 = Hispanic
-*The key for RACE is as follows:
-  + 1 = White Alone
-  + 2 = Black or African American Alone
-  + 3 = American Indian and Alaska Native Alone
-  + 4 = Asian Alone
-  + 5 = Native Hawaiian and Other Pacific Islander Alone 6 = Two or more races
+
+  * The key for SEX is as follows:
+    + 0 = Total
+    + 1 = Male
+    + 2 = Female
+
+  * The key for ORIGIN is as follows: 
+    + 0 = Total
+    + 1 = Not Hispanic
+    + 2 = Hispanic
+
+  * The key for RACE is as follows:
+    + 1 = White Alone
+    + 2 = Black or African American Alone
+    + 3 = American Indian and Alaska Native Alone
+    + 4 = Asian Alone
+    + 5 = Native Hawaiian and Other Pacific Islander Alone 6 = Two or more races
 
 So we need to group the data in several different ways and calculate the necessary statistics.
 Let's start with "percentage of the study population that was male." For each state, we need to add every row of data that is "male" (SEX = 1) in the column POPESTIMATE2015 since we are looking at the year 2015.
@@ -73,14 +79,44 @@ head(maleStats)
 Next let's tackle age. We need to find the median age for each state. This is tricky, since we don't have a list of ages (i.e., (22,55,4,27,35)) but instead we have the counts of the age. First we need to get the total counts for each age (per state), since that's divided up into all the other categories.
 ```{r}
 library(dplyr)
+library(tidyr)
+library(data.table)
 ageStats <- census %>%
   filter(ORIGIN == 0,SEX == 0) %>% #set origin and sex to "Total" so we don't have repeats in the data.
   group_by(NAME,AGE) %>% #group by state and age
   summarize(sumAges = sum(POPESTIMATE2015)) #divide total male by total  population
+#ageStats$cumulative = cumsum(ageStats$sumAges)
 head(ageStats)
+ageStats <- dcast(setDT(ageStats), AGE ~ NAME, value.var="sumAges")
+ageStats$AGE <- NULL
+ageStats <- apply(ageStats, 2, cumsum)
+ageStats <- as.data.frame(ageStats)
+ageStats <- apply(ageStats,2,function(x) x/x[86])
+ageStats <- as.data.frame(ageStats)
+# now we have a percentile associated with each age
+# (use the index minus 1 as the age)
+# now we just need to get the age of the 50th percentile for each state...
+head(ageStats)
+median <- apply(ageStats,2,function(x) which.max(x > 0.5))
+(medians <- as.data.frame(median))
+
 ```
+Find the proportion of White, Black, and Hispanic residents per state.
+```{r}
+library(dplyr)
+raceStats <- census %>%
+  filter(ORIGIN == 0, SEX == 0) %>% #set origin and sex to "Total" so we don't have repeats in the data.
+  group_by(NAME) %>% #group by the state
+  summarize(percentWhite = sum(POPESTIMATE2015[RACE==1])/sum(POPESTIMATE2015)*100,
+            percentBlack = sum(POPESTIMATE2015[RACE==2])/sum(POPESTIMATE2015)*100) 
+head(raceStats)
 
-
+originStats <- census %>%
+  filter(SEX == 0) %>% #set origin and sex to "Total" so we don't have repeats in the data.
+  group_by(NAME) %>% #group by the state
+  summarize(percentHispanic = sum(POPESTIMATE2015[ORIGIN==2])/sum(POPESTIMATE2015[ORIGIN==0])*100)
+head(originStats)
+```
 # Exploratory data analysis
 
 # Data analysis

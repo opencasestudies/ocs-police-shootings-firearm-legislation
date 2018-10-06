@@ -363,7 +363,30 @@ crime &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span cla
 <h1>Data wrangling</h1>
 <div id="census-data" class="section level2">
 <h2>Census Data</h2>
-<p>We need to find “age; percentage of study population that was male, White, Black, Hispanic, unemployed, and college educated; and population density at the state level” using the census data. The following is taken from the document sc-est2017-alldata6.pdf: * The key for SEX is as follows: 0 = Total + 1 = Male + 2 = Female * The key for ORIGIN is as follows: 0 = Total + 1 = Not Hispanic + 2 = Hispanic *The key for RACE is as follows: + 1 = White Alone + 2 = Black or African American Alone + 3 = American Indian and Alaska Native Alone + 4 = Asian Alone + 5 = Native Hawaiian and Other Pacific Islander Alone 6 = Two or more races</p>
+<p>We need to find “age; percentage of study population that was male, White, Black, Hispanic, unemployed, and college educated; and population density at the state level” using the census data.</p>
+<p>The following is taken from the document sc-est2017-alldata6.pdf:</p>
+<ul>
+<li>The key for SEX is as follows:
+<ul>
+<li>0 = Total</li>
+<li>1 = Male</li>
+<li>2 = Female</li>
+</ul></li>
+<li>The key for ORIGIN is as follows:
+<ul>
+<li>0 = Total</li>
+<li>1 = Not Hispanic</li>
+<li>2 = Hispanic</li>
+</ul></li>
+<li>The key for RACE is as follows:
+<ul>
+<li>1 = White Alone</li>
+<li>2 = Black or African American Alone</li>
+<li>3 = American Indian and Alaska Native Alone</li>
+<li>4 = Asian Alone</li>
+<li>5 = Native Hawaiian and Other Pacific Islander Alone 6 = Two or more races</li>
+</ul></li>
+</ul>
 <p>So we need to group the data in several different ways and calculate the necessary statistics. Let’s start with “percentage of the study population that was male.” For each state, we need to add every row of data that is “male” (SEX = 1) in the column POPESTIMATE2015 since we are looking at the year 2015.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)</code></pre></div>
 <pre><code>## 
@@ -390,10 +413,18 @@ crime &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span cla
 ## 6 Colorado          50.3</code></pre>
 <p>Next let’s tackle age. We need to find the median age for each state. This is tricky, since we don’t have a list of ages (i.e., (22,55,4,27,35)) but instead we have the counts of the age. First we need to get the total counts for each age (per state), since that’s divided up into all the other categories.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
-ageStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="kw">library</span>(tidyr)
+<span class="kw">library</span>(data.table)</code></pre></div>
+<pre><code>## 
+## Attaching package: 'data.table'</code></pre>
+<pre><code>## The following objects are masked from 'package:dplyr':
+## 
+##     between, first, last</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ageStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>,SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin and sex to &quot;Total&quot; so we don't have repeats in the data.</span>
 <span class="st">  </span><span class="kw">group_by</span>(NAME,AGE) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by state and age</span>
 <span class="st">  </span><span class="kw">summarize</span>(<span class="dt">sumAges =</span> <span class="kw">sum</span>(POPESTIMATE2015)) <span class="co">#divide total male by total  population</span>
+<span class="co">#ageStats$cumulative = cumsum(ageStats$sumAges)</span>
 <span class="kw">head</span>(ageStats)</code></pre></div>
 <pre><code>## # A tibble: 6 x 3
 ## # Groups:   NAME [1]
@@ -405,6 +436,164 @@ ageStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
 ## 4 Alabama     3   58800
 ## 5 Alabama     4   59329
 ## 6 Alabama     5   59610</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ageStats &lt;-<span class="st"> </span><span class="kw">dcast</span>(<span class="kw">setDT</span>(ageStats), AGE <span class="op">~</span><span class="st"> </span>NAME, <span class="dt">value.var=</span><span class="st">&quot;sumAges&quot;</span>)
+ageStats<span class="op">$</span>AGE &lt;-<span class="st"> </span><span class="ot">NULL</span>
+ageStats &lt;-<span class="st"> </span><span class="kw">apply</span>(ageStats, <span class="dv">2</span>, cumsum)
+ageStats &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(ageStats)
+ageStats &lt;-<span class="st"> </span><span class="kw">apply</span>(ageStats,<span class="dv">2</span>,<span class="cf">function</span>(x) x<span class="op">/</span>x[<span class="dv">86</span>])
+ageStats &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(ageStats)
+<span class="co"># now we have a percentile associated with each age</span>
+<span class="co"># (use the index minus 1 as the age)</span>
+<span class="co"># now we just need to get the age of the 50th percentile for each state...</span>
+<span class="kw">head</span>(ageStats)</code></pre></div>
+<pre><code>##      Alabama     Alaska    Arizona   Arkansas California   Colorado
+## 1 0.01217929 0.01524840 0.01273885 0.01292266 0.01283122 0.01217217
+## 2 0.02428807 0.03030168 0.02549314 0.02569476 0.02561725 0.02440058
+## 3 0.03623586 0.04521944 0.03824081 0.03836806 0.03841722 0.03655841
+## 4 0.04835742 0.05979438 0.05101803 0.05126652 0.05118957 0.04888552
+## 5 0.06058804 0.07455768 0.06389963 0.06418582 0.06425629 0.06146593
+## 6 0.07287659 0.08883586 0.07672389 0.07715183 0.07703422 0.07429999
+##   Connecticut   Delaware District of Columbia    Florida    Georgia
+## 1  0.01013228 0.01163322           0.01457035 0.01095628 0.01284902
+## 2  0.02030490 0.02326537           0.02759032 0.02192577 0.02562823
+## 3  0.03056879 0.03477678           0.04071434 0.03277035 0.03837038
+## 4  0.04107142 0.04661654           0.05331661 0.04371311 0.05144559
+## 5  0.05191268 0.05868085           0.06565577 0.05471763 0.06465669
+## 6  0.06281516 0.07055238           0.07625725 0.06556014 0.07794004
+##       Hawaii      Idaho   Illinois    Indiana       Iowa     Kansas
+## 1 0.01275029 0.01390752 0.01233645 0.01264485 0.01267030 0.01334268
+## 2 0.02580557 0.02744397 0.02447549 0.02525899 0.02538518 0.02681406
+## 3 0.03896040 0.04125812 0.03656625 0.03798841 0.03802630 0.04039729
+## 4 0.05191402 0.05494312 0.04878623 0.05071888 0.05063696 0.05398568
+## 5 0.06495597 0.06903252 0.06114826 0.06349942 0.06304720 0.06773754
+## 6 0.07720568 0.08339720 0.07361843 0.07642427 0.07601445 0.08173615
+##     Kentucky  Louisiana      Maine   Maryland Massachusetts   Michigan
+## 1 0.01257763 0.01366990 0.00949098 0.01233418    0.01064012 0.01142560
+## 2 0.02509149 0.02722998 0.01906255 0.02449538    0.02127391 0.02298902
+## 3 0.03759246 0.04047237 0.02881486 0.03670807    0.03194332 0.03448267
+## 4 0.05002287 0.05358525 0.03860408 0.04897542    0.04267411 0.04603339
+## 5 0.06238658 0.06674565 0.04838728 0.06142009    0.05359301 0.05768423
+## 6 0.07479890 0.07981549 0.05862386 0.07381576    0.06436869 0.06946977
+##    Minnesota Mississippi   Missouri    Montana   Nebraska     Nevada
+## 1 0.01271147  0.01277126 0.01232034 0.01225303 0.01411096 0.01250131
+## 2 0.02555680  0.02554419 0.02475678 0.02440298 0.02814111 0.02483232
+## 3 0.03831076  0.03822836 0.03708173 0.03639442 0.04197798 0.03739746
+## 4 0.05107128  0.05115873 0.04938873 0.04838391 0.05572191 0.04979506
+## 5 0.06385461  0.06408642 0.06183571 0.06037827 0.06956617 0.06264184
+## 6 0.07683781  0.07715346 0.07425090 0.07241444 0.08347592 0.07555869
+##   New Hampshire New Jersey New Mexico   New York North Carolina
+## 1   0.009324624 0.01153672 0.01241485 0.01217189     0.01200077
+## 2   0.018656767 0.02318527 0.02496946 0.02407385     0.02400872
+## 3   0.028516676 0.03489888 0.03762395 0.03599014     0.03589836
+## 4   0.038139766 0.04677209 0.05035577 0.04784986     0.04789096
+## 5   0.048310170 0.05888928 0.06343576 0.05979279     0.06001821
+## 6   0.058454261 0.07089542 0.07675972 0.07135967     0.07240905
+##   North Dakota       Ohio   Oklahoma     Oregon Pennsylvania Rhode Island
+## 1   0.01498293 0.01195482 0.01360302 0.01137846   0.01105806   0.01029817
+## 2   0.02957241 0.02398530 0.02720220 0.02290605   0.02218984   0.02052152
+## 3   0.04375387 0.03604946 0.04094481 0.03443489   0.03332365   0.03085757
+## 4   0.05755379 0.04804797 0.05455859 0.04598165   0.04452838   0.04130916
+## 5   0.07085562 0.06006509 0.06832886 0.05770493   0.05581292   0.05183272
+## 6   0.08423825 0.07218060 0.08207403 0.06960424   0.06713265   0.06228052
+##   South Carolina South Dakota  Tennessee      Texas       Utah     Vermont
+## 1     0.01182747   0.01441743 0.01234189 0.01460720 0.01705642 0.009603574
+## 2     0.02361386   0.02898356 0.02454161 0.02916560 0.03397314 0.019524225
+## 3     0.03537920   0.04325579 0.03672630 0.04354217 0.05104564 0.029198261
+## 4     0.04736508   0.05748470 0.04900204 0.05781300 0.06758513 0.039019625
+## 5     0.05939102   0.07139980 0.06117884 0.07236083 0.08458058 0.048911451
+## 6     0.07172377   0.08542263 0.07341619 0.08698778 0.10189128 0.058848116
+##     Virginia Washington West Virginia  Wisconsin    Wyoming
+## 1 0.01229627 0.01241119    0.01083507 0.01158854 0.01320760
+## 2 0.02446226 0.02476856    0.02189516 0.02323645 0.02620022
+## 3 0.03665131 0.03725623    0.03312702 0.03492551 0.03920990
+## 4 0.04888352 0.04972054    0.04427952 0.04674149 0.05229295
+## 5 0.06116843 0.06233823    0.05542278 0.05864167 0.06547836
+## 6 0.07338952 0.07507964    0.06644809 0.07096617 0.07931555</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">median &lt;-<span class="st"> </span><span class="kw">apply</span>(ageStats,<span class="dv">2</span>,<span class="cf">function</span>(x) <span class="kw">which.max</span>(x <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.5</span>))
+(medians &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(median))</code></pre></div>
+<pre><code>##                      median
+## Alabama                  39
+## Alaska                   34
+## Arizona                  38
+## Arkansas                 38
+## California               37
+## Colorado                 37
+## Connecticut              41
+## Delaware                 40
+## District of Columbia     34
+## Florida                  42
+## Georgia                  37
+## Hawaii                   39
+## Idaho                    36
+## Illinois                 38
+## Indiana                  38
+## Iowa                     38
+## Kansas                   37
+## Kentucky                 39
+## Louisiana                37
+## Maine                    45
+## Maryland                 39
+## Massachusetts            40
+## Michigan                 40
+## Minnesota                38
+## Mississippi              37
+## Missouri                 39
+## Montana                  40
+## Nebraska                 37
+## Nevada                   38
+## New Hampshire            43
+## New Jersey               40
+## New Mexico               38
+## New York                 39
+## North Carolina           39
+## North Dakota             35
+## Ohio                     40
+## Oklahoma                 37
+## Oregon                   40
+## Pennsylvania             41
+## Rhode Island             40
+## South Carolina           39
+## South Dakota             37
+## Tennessee                39
+## Texas                    35
+## Utah                     31
+## Vermont                  43
+## Virginia                 38
+## Washington               38
+## West Virginia            43
+## Wisconsin                40
+## Wyoming                  37</code></pre>
+<p>Find the proportion of White, Black, and Hispanic residents per state.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
+raceStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>, SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin and sex to &quot;Total&quot; so we don't have repeats in the data.</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">percentWhite =</span> <span class="kw">sum</span>(POPESTIMATE2015[RACE<span class="op">==</span><span class="dv">1</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015)<span class="op">*</span><span class="dv">100</span>,
+            <span class="dt">percentBlack =</span> <span class="kw">sum</span>(POPESTIMATE2015[RACE<span class="op">==</span><span class="dv">2</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015)<span class="op">*</span><span class="dv">100</span>) 
+<span class="kw">head</span>(raceStats)</code></pre></div>
+<pre><code>## # A tibble: 6 x 3
+##   NAME       percentWhite percentBlack
+##   &lt;chr&gt;             &lt;dbl&gt;        &lt;dbl&gt;
+## 1 Alabama            69.5        26.7 
+## 2 Alaska             66.5         3.67
+## 3 Arizona            83.5         4.80
+## 4 Arkansas           79.6        15.7 
+## 5 California         73.0         6.49
+## 6 Colorado           87.6         4.47</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">originStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin and sex to &quot;Total&quot; so we don't have repeats in the data.</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">percentHispanic =</span> <span class="kw">sum</span>(POPESTIMATE2015[ORIGIN<span class="op">==</span><span class="dv">2</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015[ORIGIN<span class="op">==</span><span class="dv">0</span>])<span class="op">*</span><span class="dv">100</span>)
+<span class="kw">head</span>(originStats)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   NAME       percentHispanic
+##   &lt;chr&gt;                &lt;dbl&gt;
+## 1 Alabama               4.13
+## 2 Alaska                6.82
+## 3 Arizona              30.9 
+## 4 Arkansas              7.18
+## 5 California           38.7 
+## 6 Colorado             21.3</code></pre>
 </div>
 </div>
 <div id="exploratory-data-analysis" class="section level1">
