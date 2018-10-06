@@ -26,16 +26,60 @@ This study uses data from several different sources.
 
 # Data import
 ```{r}
+library(readxl)
+#census data
 census <- read.csv("sc-est2017-alldata6.csv",nrows = 236900,stringsAsFactors = FALSE)
 head(census)
-library(readxl)
+# Brady scores
 brady <- read_excel("Brady-State-Scorecard-2015.xlsx", sheet = 1)
 head(brady)
-
+# The Counted data
+counted15 <- read.csv("the-counted-2015.csv",stringsAsFactors = FALSE)
+counted16 <- read.csv("the-counted-2016.csv",stringsAsFactors = FALSE)
+head(counted15)
+# Crime data
+crime <- read_excel("table_5_crime_in_the_united_states_by_state_2015.xls", sheet = 1,skip = 3)
+head(crime)
 ```
 
 
 # Data wrangling
+## Census Data
+We need to find "age; percentage of study population that was male, White, Black, Hispanic, unemployed, and college educated; and population density at the state level" using the census data.
+The following is taken from the document sc-est2017-alldata6.pdf:
+* The key for SEX is as follows: 0 = Total
+  + 1 = Male
+  + 2 = Female
+* The key for ORIGIN is as follows: 0 = Total
+  + 1 = Not Hispanic
+  + 2 = Hispanic
+*The key for RACE is as follows:
+  + 1 = White Alone
+  + 2 = Black or African American Alone
+  + 3 = American Indian and Alaska Native Alone
+  + 4 = Asian Alone
+  + 5 = Native Hawaiian and Other Pacific Islander Alone 6 = Two or more races
+
+So we need to group the data in several different ways and calculate the necessary statistics.
+Let's start with "percentage of the study population that was male." For each state, we need to add every row of data that is "male" (SEX = 1) in the column POPESTIMATE2015 since we are looking at the year 2015.
+```{r}
+library(dplyr)
+maleStats <- census %>%
+  filter(ORIGIN == 0) %>% #set origin to "Total" so we don't have repeats in the data.
+  group_by(NAME) %>% #group by the state
+  summarize(percentMale = sum(POPESTIMATE2015[SEX==1])/sum(POPESTIMATE2015[SEX==0])*100) #divide total male by total  population
+head(maleStats)
+```
+Next let's tackle age. We need to find the median age for each state. This is tricky, since we don't have a list of ages (i.e., (22,55,4,27,35)) but instead we have the counts of the age. First we need to get the total counts for each age (per state), since that's divided up into all the other categories.
+```{r}
+library(dplyr)
+ageStats <- census %>%
+  filter(ORIGIN == 0,SEX == 0) %>% #set origin and sex to "Total" so we don't have repeats in the data.
+  group_by(NAME,AGE) %>% #group by state and age
+  summarize(sumAges = sum(POPESTIMATE2015)) #divide total male by total  population
+head(ageStats)
+```
+
 
 # Exploratory data analysis
 

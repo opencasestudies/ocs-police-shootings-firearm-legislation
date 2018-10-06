@@ -265,7 +265,9 @@ div.tocify {
 </div>
 <div id="data-import" class="section level1">
 <h1>Data import</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">census &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;sc-est2017-alldata6.csv&quot;</span>,<span class="dt">nrows =</span> <span class="dv">236900</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(readxl)
+<span class="co">#census data</span>
+census &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;sc-est2017-alldata6.csv&quot;</span>,<span class="dt">nrows =</span> <span class="dv">236900</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
 <span class="kw">head</span>(census)</code></pre></div>
 <pre><code>##   SUMLEV REGION DIVISION STATE    NAME SEX ORIGIN RACE AGE CENSUS2010POP
 ## 1     40      3        6     1 Alabama   0      0    1   0         37991
@@ -295,7 +297,7 @@ div.tocify {
 ## 4           37960
 ## 5           37123
 ## 6           37913</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(readxl)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Brady scores</span>
 brady &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;Brady-State-Scorecard-2015.xlsx&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>)
 <span class="kw">head</span>(brady)</code></pre></div>
 <pre><code>## # A tibble: 6 x 54
@@ -315,9 +317,95 @@ brady &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span cla
 ## #   OK &lt;chr&gt;, OH &lt;chr&gt;, OR &lt;chr&gt;, PA &lt;chr&gt;, RI &lt;chr&gt;, SC &lt;chr&gt;, SD &lt;chr&gt;,
 ## #   TN &lt;chr&gt;, TX &lt;chr&gt;, UT &lt;chr&gt;, VA &lt;chr&gt;, VT &lt;chr&gt;, WA &lt;chr&gt;, WI &lt;chr&gt;,
 ## #   WV &lt;chr&gt;, WY &lt;chr&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># The Counted data</span>
+counted15 &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;the-counted-2015.csv&quot;</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+counted16 &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;the-counted-2016.csv&quot;</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+<span class="kw">head</span>(counted15)</code></pre></div>
+<pre><code>##   uid              name age gender          raceethnicity   month day year
+## 1   2   Matthew Ajibade  22   Male                  Black January   1 2015
+## 2   4      Lewis Lembke  47   Male                  White January   2 2015
+## 3   5 Michael Kocher Jr  19   Male                  White January   3 2015
+## 4   6     John Quintero  23   Male        Hispanic/Latino January   3 2015
+## 5   7       Tim Elliott  53   Male Asian/Pacific Islander January   2 2015
+## 6   8   Matthew Hoffman  32   Male                  White January   4 2015
+##          streetaddress          city state    classification
+## 1 1050 Carl Griffin Dr      Savannah    GA  Death in custody
+## 2 4505 SW Masters Loop         Aloha    OR           Gunshot
+## 3   2600 Kaumualii Hwy     Kaumakani    HI Struck by vehicle
+## 4 500 North Oliver Ave       Wichita    KS           Gunshot
+## 5 600 E Island Lake Dr       Shelton    WA           Gunshot
+## 6      630 Valencia St San Francisco    CA           Gunshot
+##                 lawenforcementagency              armed
+## 1    Chatham County Sheriff's Office                 No
+## 2 Washington County Sheriff's Office            Firearm
+## 3            Kauai Police Department                 No
+## 4          Wichita Police Department                 No
+## 5      Mason County Sheriff's Office            Firearm
+## 6    San Francisco Police Department Non-lethal firearm</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Crime data</span>
+crime &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;table_5_crime_in_the_united_states_by_state_2015.xls&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>,<span class="dt">skip =</span> <span class="dv">3</span>)
+<span class="kw">head</span>(crime)</code></pre></div>
+<pre><code>## # A tibble: 6 x 14
+##   State Area  X__1  Population `Violent\ncrime… `Murder and \nn…
+##   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;                 &lt;dbl&gt;            &lt;dbl&gt;
+## 1 ALAB… Metr… &lt;NA&gt;  3708033                  NA               NA
+## 2 &lt;NA&gt;  &lt;NA&gt;  Area… 0.9709999…            18122              283
+## 3 &lt;NA&gt;  &lt;NA&gt;  Esti… 1                     18500              287
+## 4 &lt;NA&gt;  Citi… &lt;NA&gt;  522241                   NA               NA
+## 5 &lt;NA&gt;  &lt;NA&gt;  Area… 0.9739999…             3178               32
+## 6 &lt;NA&gt;  &lt;NA&gt;  Esti… 1                      3240               33
+## # ... with 8 more variables: `Rape\n(revised\ndefinition)2` &lt;dbl&gt;,
+## #   `Rape\n(legacy\ndefinition)3` &lt;dbl&gt;, Robbery &lt;dbl&gt;, `Aggravated
+## #   \nassault` &lt;dbl&gt;, `Property \ncrime` &lt;dbl&gt;, Burglary &lt;dbl&gt;,
+## #   `Larceny-\ntheft` &lt;dbl&gt;, `Motor \nvehicle \ntheft` &lt;dbl&gt;</code></pre>
 </div>
 <div id="data-wrangling" class="section level1">
 <h1>Data wrangling</h1>
+<div id="census-data" class="section level2">
+<h2>Census Data</h2>
+<p>We need to find “age; percentage of study population that was male, White, Black, Hispanic, unemployed, and college educated; and population density at the state level” using the census data. The following is taken from the document sc-est2017-alldata6.pdf: * The key for SEX is as follows: 0 = Total + 1 = Male + 2 = Female * The key for ORIGIN is as follows: 0 = Total + 1 = Not Hispanic + 2 = Hispanic *The key for RACE is as follows: + 1 = White Alone + 2 = Black or African American Alone + 3 = American Indian and Alaska Native Alone + 4 = Asian Alone + 5 = Native Hawaiian and Other Pacific Islander Alone 6 = Two or more races</p>
+<p>So we need to group the data in several different ways and calculate the necessary statistics. Let’s start with “percentage of the study population that was male.” For each state, we need to add every row of data that is “male” (SEX = 1) in the column POPESTIMATE2015 since we are looking at the year 2015.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)</code></pre></div>
+<pre><code>## 
+## Attaching package: 'dplyr'</code></pre>
+<pre><code>## The following objects are masked from 'package:stats':
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">maleStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin to &quot;Total&quot; so we don't have repeats in the data.</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">percentMale =</span> <span class="kw">sum</span>(POPESTIMATE2015[SEX<span class="op">==</span><span class="dv">1</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015[SEX<span class="op">==</span><span class="dv">0</span>])<span class="op">*</span><span class="dv">100</span>) <span class="co">#divide total male by total  population</span>
+<span class="kw">head</span>(maleStats)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   NAME       percentMale
+##   &lt;chr&gt;            &lt;dbl&gt;
+## 1 Alabama           48.5
+## 2 Alaska            52.4
+## 3 Arizona           49.7
+## 4 Arkansas          49.1
+## 5 California        49.7
+## 6 Colorado          50.3</code></pre>
+<p>Next let’s tackle age. We need to find the median age for each state. This is tricky, since we don’t have a list of ages (i.e., (22,55,4,27,35)) but instead we have the counts of the age. First we need to get the total counts for each age (per state), since that’s divided up into all the other categories.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
+ageStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>,SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin and sex to &quot;Total&quot; so we don't have repeats in the data.</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME,AGE) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by state and age</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">sumAges =</span> <span class="kw">sum</span>(POPESTIMATE2015)) <span class="co">#divide total male by total  population</span>
+<span class="kw">head</span>(ageStats)</code></pre></div>
+<pre><code>## # A tibble: 6 x 3
+## # Groups:   NAME [1]
+##   NAME      AGE sumAges
+##   &lt;chr&gt;   &lt;int&gt;   &lt;int&gt;
+## 1 Alabama     0   59080
+## 2 Alabama     1   58738
+## 3 Alabama     2   57957
+## 4 Alabama     3   58800
+## 5 Alabama     4   59329
+## 6 Alabama     5   59610</code></pre>
+</div>
 </div>
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory data analysis</h1>
