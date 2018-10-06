@@ -44,7 +44,7 @@ head(crime)
 
 
 # Data wrangling
-## Census Data
+## 1. Census Data
 We need to find "age; percentage of study population that was male, White, Black, Hispanic, unemployed, and college educated; and population density at the state level" using the census data.
 
 The following is taken from the document sc-est2017-alldata6.pdf:
@@ -117,6 +117,33 @@ originStats <- census %>%
   summarize(percentHispanic = sum(POPESTIMATE2015[ORIGIN==2])/sum(POPESTIMATE2015[ORIGIN==0])*100)
 head(originStats)
 ```
+## 2. Violent Crime
+```{r}
+library(dplyr)
+library(zoo)
+head(crime)
+# Selecting "Violent crime1" was not working, so I printed "colnames(crime)" to see that there are some extraneous characters in the names. Instead I take the index from the column names. I also could probably just select the index of the columns.
+violentcrime<- crime %>%
+  select("State",colnames(crime)[3], colnames(crime)[5]) 
+violentcrime[10:20,] 
+violentcrime2<- violentcrime %>%
+  group_by(State) %>% 
+  na.locf %>%
+  ungroup
+violentcrime2[10:20,] 
+# Hmm..I don't want to fill na for the other columns just yet because now there are duplicate rows with different states, making it confusing.
+# Let's do a quick fix
+violentcrime$State <- violentcrime2$State
+violentcrime[10:20,]
+# I really want the "Rate per 100,000 inhabitants" for violent crime for each state.
+violentcrime<- subset(violentcrime, X__1 == "Rate per 100,000 inhabitants")
+violentcrime$X__1 <- NULL
+names(violentcrime) <- c("State", "Violent_Crime_rate_per_100,000")
+head(violentcrime)
+```
+
+## 3. Brady Scores
+## 4. The Counted Fatal Shootings
 # Exploratory data analysis
 
 # Data analysis

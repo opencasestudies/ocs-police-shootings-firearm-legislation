@@ -362,7 +362,7 @@ crime &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span cla
 <div id="data-wrangling" class="section level1">
 <h1>Data wrangling</h1>
 <div id="census-data" class="section level2">
-<h2>Census Data</h2>
+<h2>1. Census Data</h2>
 <p>We need to find “age; percentage of study population that was male, White, Black, Hispanic, unemployed, and college educated; and population density at the state level” using the census data.</p>
 <p>The following is taken from the document sc-est2017-alldata6.pdf:</p>
 <ul>
@@ -594,6 +594,105 @@ raceStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
 ## 4 Arkansas              7.18
 ## 5 California           38.7 
 ## 6 Colorado             21.3</code></pre>
+</div>
+<div id="violent-crime" class="section level2">
+<h2>2. Violent Crime</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
+<span class="kw">library</span>(zoo)</code></pre></div>
+<pre><code>## 
+## Attaching package: 'zoo'</code></pre>
+<pre><code>## The following objects are masked from 'package:base':
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(crime)</code></pre></div>
+<pre><code>## # A tibble: 6 x 14
+##   State Area  X__1  Population `Violent\ncrime… `Murder and \nn…
+##   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;                 &lt;dbl&gt;            &lt;dbl&gt;
+## 1 ALAB… Metr… &lt;NA&gt;  3708033                  NA               NA
+## 2 &lt;NA&gt;  &lt;NA&gt;  Area… 0.9709999…            18122              283
+## 3 &lt;NA&gt;  &lt;NA&gt;  Esti… 1                     18500              287
+## 4 &lt;NA&gt;  Citi… &lt;NA&gt;  522241                   NA               NA
+## 5 &lt;NA&gt;  &lt;NA&gt;  Area… 0.9739999…             3178               32
+## 6 &lt;NA&gt;  &lt;NA&gt;  Esti… 1                      3240               33
+## # ... with 8 more variables: `Rape\n(revised\ndefinition)2` &lt;dbl&gt;,
+## #   `Rape\n(legacy\ndefinition)3` &lt;dbl&gt;, Robbery &lt;dbl&gt;, `Aggravated
+## #   \nassault` &lt;dbl&gt;, `Property \ncrime` &lt;dbl&gt;, Burglary &lt;dbl&gt;,
+## #   `Larceny-\ntheft` &lt;dbl&gt;, `Motor \nvehicle \ntheft` &lt;dbl&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Selecting &quot;Violent crime1&quot; was not working, so I printed &quot;colnames(crime)&quot; to see that there are some extraneous characters in the names. Instead I take the index from the column names. I also could probably just select the index of the columns.</span>
+violentcrime&lt;-<span class="st"> </span>crime <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(<span class="st">&quot;State&quot;</span>,<span class="kw">colnames</span>(crime)[<span class="dv">3</span>], <span class="kw">colnames</span>(crime)[<span class="dv">5</span>]) 
+violentcrime[<span class="dv">10</span><span class="op">:</span><span class="dv">20</span>,] </code></pre></div>
+<pre><code>## # A tibble: 11 x 3
+##    State  X__1                         `Violent\ncrime1`
+##    &lt;chr&gt;  &lt;chr&gt;                                    &lt;dbl&gt;
+##  1 &lt;NA&gt;   &lt;NA&gt;                                    22952 
+##  2 &lt;NA&gt;   Rate per 100,000 inhabitants              472.
+##  3 ALASKA &lt;NA&gt;                                       NA 
+##  4 &lt;NA&gt;   Area actually reporting                  3464 
+##  5 &lt;NA&gt;   &lt;NA&gt;                                       NA 
+##  6 &lt;NA&gt;   Area actually reporting                   886 
+##  7 &lt;NA&gt;   Estimated total                           913 
+##  8 &lt;NA&gt;   &lt;NA&gt;                                       NA 
+##  9 &lt;NA&gt;   Area actually reporting                  1015 
+## 10 &lt;NA&gt;   &lt;NA&gt;                                     5392 
+## 11 &lt;NA&gt;   Rate per 100,000 inhabitants              730.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">violentcrime2&lt;-<span class="st"> </span>violentcrime <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(State) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>na.locf <span class="op">%&gt;%</span>
+<span class="st">  </span>ungroup
+violentcrime2[<span class="dv">10</span><span class="op">:</span><span class="dv">20</span>,] </code></pre></div>
+<pre><code>## # A tibble: 11 x 3
+##    State   X__1                         `Violent\ncrime1`
+##    &lt;chr&gt;   &lt;chr&gt;                        &lt;chr&gt;            
+##  1 ALABAMA Estimated total              &quot; 22952.0&quot;       
+##  2 ALABAMA Rate per 100,000 inhabitants &quot;   472.4&quot;       
+##  3 ALASKA  Rate per 100,000 inhabitants &quot;   472.4&quot;       
+##  4 ALASKA  Area actually reporting      &quot;  3464.0&quot;       
+##  5 ALASKA  Area actually reporting      &quot;  3464.0&quot;       
+##  6 ALASKA  Area actually reporting      &quot;   886.0&quot;       
+##  7 ALASKA  Estimated total              &quot;   913.0&quot;       
+##  8 ALASKA  Estimated total              &quot;   913.0&quot;       
+##  9 ALASKA  Area actually reporting      &quot;  1015.0&quot;       
+## 10 ALASKA  Area actually reporting      &quot;  5392.0&quot;       
+## 11 ALASKA  Rate per 100,000 inhabitants &quot;   730.2&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Hmm..I don't want to fill na for the other columns just yet because now there are duplicate rows with different states, making it confusing.</span>
+<span class="co"># Let's do a quick fix</span>
+violentcrime<span class="op">$</span>State &lt;-<span class="st"> </span>violentcrime2<span class="op">$</span>State
+violentcrime[<span class="dv">10</span><span class="op">:</span><span class="dv">20</span>,]</code></pre></div>
+<pre><code>## # A tibble: 11 x 3
+##    State   X__1                         `Violent\ncrime1`
+##    &lt;chr&gt;   &lt;chr&gt;                                    &lt;dbl&gt;
+##  1 ALABAMA &lt;NA&gt;                                    22952 
+##  2 ALABAMA Rate per 100,000 inhabitants              472.
+##  3 ALASKA  &lt;NA&gt;                                       NA 
+##  4 ALASKA  Area actually reporting                  3464 
+##  5 ALASKA  &lt;NA&gt;                                       NA 
+##  6 ALASKA  Area actually reporting                   886 
+##  7 ALASKA  Estimated total                           913 
+##  8 ALASKA  &lt;NA&gt;                                       NA 
+##  9 ALASKA  Area actually reporting                  1015 
+## 10 ALASKA  &lt;NA&gt;                                     5392 
+## 11 ALASKA  Rate per 100,000 inhabitants              730.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># I really want the &quot;Rate per 100,000 inhabitants&quot; for violent crime for each state.</span>
+violentcrime&lt;-<span class="st"> </span><span class="kw">subset</span>(violentcrime, X__<span class="dv">1</span> <span class="op">==</span><span class="st"> &quot;Rate per 100,000 inhabitants&quot;</span>)
+violentcrime<span class="op">$</span>X__<span class="dv">1</span> &lt;-<span class="st"> </span><span class="ot">NULL</span>
+<span class="kw">names</span>(violentcrime) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;State&quot;</span>, <span class="st">&quot;Violent_Crime_rate_per_100,000&quot;</span>)
+<span class="kw">head</span>(violentcrime)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   State      `Violent_Crime_rate_per_100,000`
+##   &lt;chr&gt;                                 &lt;dbl&gt;
+## 1 ALABAMA                                472.
+## 2 ALASKA                                 730.
+## 3 ARIZONA                                410.
+## 4 ARKANSAS                               521.
+## 5 CALIFORNIA                             426.
+## 6 COLORADO                               321</code></pre>
+</div>
+<div id="brady-scores" class="section level2">
+<h2>3. Brady Scores</h2>
+</div>
+<div id="the-counted-fatal-shootings" class="section level2">
+<h2>4. The Counted Fatal Shootings</h2>
 </div>
 </div>
 <div id="exploratory-data-analysis" class="section level1">
