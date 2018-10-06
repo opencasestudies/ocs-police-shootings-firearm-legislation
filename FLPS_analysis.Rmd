@@ -1,0 +1,46 @@
+---
+title: Firearm Legislation and Fatal Police Shootings in the US
+output: 
+    html_document:
+        theme: cosmo 
+        toc: true
+        toc_float: true
+        highlight: tango
+        number_sections: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Motivation
+Here we will recreate a study completed by the American Journal of Public Health "to examine whether stricter firearm legislation is associated with rates of fatal police shootings." https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770
+
+# What is the data?
+This study uses data from several different sources.
+
+1. The Brady Campain State Scorecard from 2015. This provides numerical scores for each state across different types of firearm legislation. Obtained at http://crimadvisor.com/data/Brady-State-Scorecard-2015.pdf.
+2. The Counted: People killed by police in the US. Because "the US government has no comprehensive record of the number of people killed by law enforcement," The Counted project started and is known as a more accurate source for this data. https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted.
+3. Sociodemographic data, such as age, race, gender, and total population by state obtained from the US Census.https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html.
+4. Violent crime data in 2015 by state.Obtained from the FBI's Uniform crime report https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5.
+
+# Data import
+```{r}
+census <- read.csv("sc-est2017-alldata6.csv",nrows = 236900,stringsAsFactors = FALSE)
+head(census)
+library(readxl)
+brady <- read_excel("Brady-State-Scorecard-2015.xlsx", sheet = 1)
+head(brady)
+
+```
+
+
+# Data wrangling
+
+# Exploratory data analysis
+
+# Data analysis
+
+# Summary of results
+
+
