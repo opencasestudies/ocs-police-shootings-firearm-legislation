@@ -23,29 +23,31 @@ This study uses data from several different sources.
 2. The Counted: People killed by police in the US. Because "the US government has no comprehensive record of the number of people killed by law enforcement," The Counted project started and is known as a more accurate source for this data. https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted.
 3. Sociodemographic data, such as age, race, gender, and total population by state obtained from the US Census.https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html.
 4. Violent crime data in 2015 by state.Obtained from the FBI's Uniform crime report https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5.
+5. Unemployment rate data: https://www.bls.gov/lau/lastrk15.htm
+6. Need education data
 
 # Data import
 ```{r}
 library(readxl)
 #census data
 census <- read.csv("sc-est2017-alldata6.csv",nrows = 236900,stringsAsFactors = FALSE)
-head(census)
+head(census[, 1:5])
 # Brady scores
 brady <- read_excel("Brady-State-Scorecard-2015.xlsx", sheet = 1)
-head(brady)
+head(brady[, 1:5])
 # The Counted data
 counted15 <- read.csv("the-counted-2015.csv",stringsAsFactors = FALSE)
 counted16 <- read.csv("the-counted-2016.csv",stringsAsFactors = FALSE)
-head(counted15)
+head(counted15[, 1:5])
 # Crime data
 crime <- read_excel("table_5_crime_in_the_united_states_by_state_2015.xls", sheet = 1,skip = 3)
-head(crime)
+head(crime[, 1:5])
 ```
 
 
 # Data wrangling
 ## 1. Census Data
-We need to find "age; percentage of study population that was male, White, Black, Hispanic, unemployed, and college educated; and population density at the state level" using the census data.
+We need to find "age; percentage of study population that was male, White, Black, Hispanic, ... at the state level" using the census data.
 
 The following is taken from the document sc-est2017-alldata6.pdf:
 
@@ -85,20 +87,20 @@ ageStats <- census %>%
   filter(ORIGIN == 0,SEX == 0) %>% #set origin and sex to "Total" so we don't have repeats in the data.
   group_by(NAME,AGE) %>% #group by state and age
   summarize(sumAges = sum(POPESTIMATE2015)) #divide total male by total  population
-#ageStats$cumulative = cumsum(ageStats$sumAges)
 head(ageStats)
+# transform matrix to have state names as column heaeders
 ageStats <- dcast(setDT(ageStats), AGE ~ NAME, value.var="sumAges")
-ageStats$AGE <- NULL
-ageStats <- apply(ageStats, 2, cumsum)
-ageStats <- as.data.frame(ageStats)
-ageStats <- apply(ageStats,2,function(x) x/x[86])
-ageStats <- as.data.frame(ageStats)
+ageStats$AGE <- NULL #get rid of the age columns since we can just use the index minus 1
+ageStats <- apply(ageStats, 2, cumsum) # take the cumulative sum of each column
+ageStats <- as.data.frame(ageStats) # convert back to a dataframe
+ageStats <- apply(ageStats,2,function(x) x/x[86]) # divide each column by the last value, showing the cumulative sum at that age as a percentile
+ageStats <- as.data.frame(ageStats) # convert back to a dataframe
 # now we have a percentile associated with each age
-# (use the index minus 1 as the age)
 # now we just need to get the age of the 50th percentile for each state...
-head(ageStats)
-median <- apply(ageStats,2,function(x) which.max(x > 0.5))
-(medians <- as.data.frame(median))
+head(ageStats[, 1:6])
+median <- apply(ageStats,2,function(x) which.max(x >= 0.5)-1) 
+medians <- as.data.frame(median)
+head(medians)
 
 ```
 Find the proportion of White, Black, and Hispanic residents per state.
@@ -140,13 +142,68 @@ violentcrime<- subset(violentcrime, X__1 == "Rate per 100,000 inhabitants")
 violentcrime$X__1 <- NULL
 names(violentcrime) <- c("State", "Violent_Crime_rate_per_100,000")
 head(violentcrime)
+# Looking at our dataframe we can see some of the state names have numbers in them. This will make it hard to later merge this data together, so we should clean this up.
+violentcrime$State<-gsub('[0-9]+', '', violentcrime$State)
 ```
 
 ## 3. Brady Scores
+The study by AJPH groups the scores by the 7 categories. It is also important to note that the study removed all weightings of the different laws in favor of a "1 law 1 point" system, since the weightings were "somewhat arbitrary."
+```{r}
+#install.packages("rJava")
+#install.packages(c("NLP", "openNLP", "RWeka", "qdap"))
+require(rJava)
+require(openNLP)
+library(rJava)
+library(NLP)
+library(openNLP)
+#library(RWeka)
+
+PHlaws <- readLines("supplemental table a. .txt")
+blaws <- brady[1]
+
+```
+
+
+
 ## 4. The Counted Fatal Shootings
+```{r}
+# first combine the two years of data
+counted1516 <- rbind(counted15, counted16)
+fatal_gunshot <- counted1516 %>%
+  filter(classification == "Gunshot") %>% # look at firearm dealths
+  group_by(state, armed, raceethnicity) %>% #group by the state
+  tally() # just count the number of observations in each of the grouped categories
+head(fatal_gunshot)
+```
+## 5. Unemployment Data
+This data is available online, but there is no easy download of the table. It is also hard to simply copy and paste; it doesn't hold it's table format. Thus, let's set up a web scraper to get the data.
+
+```{r}
+# install.packages("rvest")
+library(rvest)
+url <- read_html("https://www.bls.gov/lau/lastrk15.htm")
+datavalues <- url%>%
+  html_nodes('.datavalue') %>% # html_nodes acts as a CSS selector
+  html_text() %>%
+  as.numeric()
+
+state <- url%>%
+  html_nodes('.sub0') %>%
+  html_text()
+
+unemployment<-as.data.frame(state[c(2:52)]) # the first listing is united states and we don't need that
+# since "datavalue" was the class name for both fields, we need to seperate them by taking every other entry as rank and every other as unemployment rate
+# skip the first two entries
+rate_select <- seq(3,103,by=2)
+rank_select <- seq(4,104,by=2)
+unemployment$rate <- datavalues[rate_select]
+unemployment$rank <- datavalues[rank_select]
+head(unemployment)
+```
+
 # Exploratory data analysis
 
-# Data analysis
+# Data analysis 
 
 # Summary of results
 
