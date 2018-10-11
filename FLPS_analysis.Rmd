@@ -39,7 +39,7 @@ head(brady[, 1:5])
 # The Counted data
 counted15 <- read.csv("the-counted-2015.csv",stringsAsFactors = FALSE)
 counted16 <- read.csv("the-counted-2016.csv",stringsAsFactors = FALSE)
-head(counted15[, 1:5])
+head(counted15)
 # Crime data
 crime <- read_excel("table_5_crime_in_the_united_states_by_state_2015.xls", sheet = 1,skip = 3)
 head(crime[, 1:5])
