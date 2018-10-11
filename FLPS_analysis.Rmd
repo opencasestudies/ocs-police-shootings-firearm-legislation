@@ -24,7 +24,8 @@ This study uses data from several different sources.
 3. Sociodemographic data, such as age, race, gender, and total population by state obtained from the US Census.https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html.
 4. Violent crime data in 2015 by state.Obtained from the FBI's Uniform crime report https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5.
 5. Unemployment rate data: https://www.bls.gov/lau/lastrk15.htm
-6. Need education data
+6. To calculate population density in 2015, we must import land area data from the US census (2010 land area data). https://www.census.gov/support/USACdataDownloads.html#LND
+7. Need education data
 
 # Data import
 ```{r}
@@ -42,6 +43,9 @@ head(counted15[, 1:5])
 # Crime data
 crime <- read_excel("table_5_crime_in_the_united_states_by_state_2015.xls", sheet = 1,skip = 3)
 head(crime[, 1:5])
+# Land area data
+land <- read_excel("LND01.xls", sheet = 1)
+head(land[, 1:5])
 ```
 
 
@@ -128,6 +132,8 @@ head(crime)
 violentcrime<- crime %>%
   select("State",colnames(crime)[3], colnames(crime)[5]) 
 violentcrime[10:20,] 
+#violentcrime$State <- na.locf(violentcrime$State)
+#(violentcrime)
 violentcrime2<- violentcrime %>%
   group_by(State) %>% 
   na.locf %>%
@@ -168,12 +174,11 @@ blaws <- brady[1]
 ## 4. The Counted Fatal Shootings
 ```{r}
 # first combine the two years of data
+# install.packages("openintro")
+library(openintro)
 counted1516 <- rbind(counted15, counted16)
-fatal_gunshot <- counted1516 %>%
-  filter(classification == "Gunshot") %>% # look at firearm dealths
-  group_by(state, armed, raceethnicity) %>% #group by the state
-  tally() # just count the number of observations in each of the grouped categories
-head(fatal_gunshot)
+counted1516$state <-toupper(abbr2state(counted1516$state))
+head(counted1516)
 ```
 ## 5. Unemployment Data
 This data is available online, but there is no easy download of the table. It is also hard to simply copy and paste; it doesn't hold it's table format. Thus, let's set up a web scraper to get the data.
@@ -200,8 +205,35 @@ unemployment$rate <- datavalues[rate_select]
 unemployment$rank <- datavalues[rank_select]
 head(unemployment)
 ```
+## 6. Population Density 2015 
+We can calculate total 2015 population from the census data and import land area to calculate population density.
 
+```{r}
+library(dplyr)
+totalPop <- census %>%
+  filter(ORIGIN == 0, SEX == 0 ) %>% #set origin & sex to "Total" so we don't have repeats in the data.
+  group_by(NAME) %>% #group by the state
+  summarize(total = sum(POPESTIMATE2015)) #divide total male by total 
+landSqMi <- land %>%
+  select(Areaname,LND110210D) # I selected LND110210D because I looked at the data table at https://www.census.gov/geo/reference/state-area.html and compared values to find the correct column. This one corresponds to land area in square miles
+
+# Now we just need to do an inner merge on the state and areaname so that we just get the area for each state.
+names(landSqMi) <- c("NAME", "LandAreaSqMiles")
+landSqMi$NAME <- toupper(landSqMi$NAME) # need to make both columns 
+totalPop$NAME <- toupper(totalPop$NAME)
+popdensity <- merge(totalPop,landSqMi,by="NAME")
+popdensity$density <- popdensity$total/popdensity$LandAreaSqMiles
+head(popdensity)
+```
 # Exploratory data analysis
+```{r}
+# "We calculated descriptive statistics for the proportion of victims that were male, armed, and non-White."
+fatal_gunshot <- counted1516 %>%
+  filter(classification == "Gunshot",raceethnicity != "white", armed != "No", gender == "Male") %>%
+  group_by(state) %>% #group by the state
+  tally() # just count the number of observations in each of the grouped categories
+head(fatal_gunshot)
+```
 
 # Data analysis 
 

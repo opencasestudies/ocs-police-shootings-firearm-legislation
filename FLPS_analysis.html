@@ -262,6 +262,7 @@ div.tocify {
 <li>Sociodemographic data, such as age, race, gender, and total population by state obtained from the US Census.<a href="https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html" class="uri">https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html</a>.</li>
 <li>Violent crime data in 2015 by state.Obtained from the FBI’s Uniform crime report <a href="https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5" class="uri">https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5</a>.</li>
 <li>Unemployment rate data: <a href="https://www.bls.gov/lau/lastrk15.htm" class="uri">https://www.bls.gov/lau/lastrk15.htm</a></li>
+<li>To calculate population density in 2015, we must import land area data from the US census (2010 land area data). <a href="https://www.census.gov/support/USACdataDownloads.html#LND" class="uri">https://www.census.gov/support/USACdataDownloads.html#LND</a></li>
 <li>Need education data</li>
 </ol>
 </div>
@@ -313,6 +314,18 @@ crime &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span cla
 ## 4 &lt;NA&gt;   Cities outside met… &lt;NA&gt;          522241                       NA
 ## 5 &lt;NA&gt;   &lt;NA&gt;                Area actuall… 0.97399999999…             3178
 ## 6 &lt;NA&gt;   &lt;NA&gt;                Estimated to… 1                          3240</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Land area data</span>
+land &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;LND01.xls&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>)
+<span class="kw">head</span>(land[, <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>])</code></pre></div>
+<pre><code>## # A tibble: 6 x 5
+##   Areaname      STCOU LND010190F LND010190D LND010190N1
+##   &lt;chr&gt;         &lt;chr&gt;      &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;      
+## 1 UNITED STATES 00000          0   3787425. 0000       
+## 2 ALABAMA       01000          0     52423. 0000       
+## 3 Autauga, AL   01001          0       604. 0000       
+## 4 Baldwin, AL   01003          0      2027. 0000       
+## 5 Barbour, AL   01005          0       905. 0000       
+## 6 Bibb, AL      01007          0       626. 0000</code></pre>
 </div>
 <div id="data-wrangling" class="section level1">
 <h1>Data wrangling</h1>
@@ -399,21 +412,14 @@ ageStats &lt;-<span class="st"> </span><span class="kw">apply</span>(ageStats,<s
 ageStats &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(ageStats) <span class="co"># convert back to a dataframe</span>
 <span class="co"># now we have a percentile associated with each age</span>
 <span class="co"># now we just need to get the age of the 50th percentile for each state...</span>
-<span class="kw">head</span>(ageStats[, <span class="dv">1</span><span class="op">:</span><span class="dv">7</span>])</code></pre></div>
+<span class="kw">head</span>(ageStats[, <span class="dv">1</span><span class="op">:</span><span class="dv">6</span>])</code></pre></div>
 <pre><code>##      Alabama     Alaska    Arizona   Arkansas California   Colorado
 ## 1 0.01217929 0.01524840 0.01273885 0.01292266 0.01283122 0.01217217
 ## 2 0.02428807 0.03030168 0.02549314 0.02569476 0.02561725 0.02440058
 ## 3 0.03623586 0.04521944 0.03824081 0.03836806 0.03841722 0.03655841
 ## 4 0.04835742 0.05979438 0.05101803 0.05126652 0.05118957 0.04888552
 ## 5 0.06058804 0.07455768 0.06389963 0.06418582 0.06425629 0.06146593
-## 6 0.07287659 0.08883586 0.07672389 0.07715183 0.07703422 0.07429999
-##   Connecticut
-## 1  0.01013228
-## 2  0.02030490
-## 3  0.03056879
-## 4  0.04107142
-## 5  0.05191268
-## 6  0.06281516</code></pre>
+## 6 0.07287659 0.08883586 0.07672389 0.07715183 0.07703422 0.07429999</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">median &lt;-<span class="st"> </span><span class="kw">apply</span>(ageStats,<span class="dv">2</span>,<span class="cf">function</span>(x) <span class="kw">which.max</span>(x <span class="op">&gt;=</span><span class="st"> </span><span class="fl">0.5</span>)<span class="op">-</span><span class="dv">1</span>) 
 medians &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(median)
 <span class="kw">head</span>(medians)</code></pre></div>
@@ -497,7 +503,9 @@ violentcrime[<span class="dv">10</span><span class="op">:</span><span class="dv"
 ##  9 &lt;NA&gt;   Area actually reporting                  1015 
 ## 10 &lt;NA&gt;   &lt;NA&gt;                                     5392 
 ## 11 &lt;NA&gt;   Rate per 100,000 inhabitants              730.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">violentcrime2&lt;-<span class="st"> </span>violentcrime <span class="op">%&gt;%</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#violentcrime$State &lt;- na.locf(violentcrime$State)</span>
+<span class="co">#(violentcrime)</span>
+violentcrime2&lt;-<span class="st"> </span>violentcrime <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">group_by</span>(State) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span>na.locf <span class="op">%&gt;%</span>
 <span class="st">  </span>ungroup
@@ -571,22 +579,41 @@ blaws &lt;-<span class="st"> </span>brady[<span class="dv">1</span>]</code></pre
 <div id="the-counted-fatal-shootings" class="section level2">
 <h2>4. The Counted Fatal Shootings</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># first combine the two years of data</span>
-counted1516 &lt;-<span class="st"> </span><span class="kw">rbind</span>(counted15, counted16)
-fatal_gunshot &lt;-<span class="st"> </span>counted1516 <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(classification <span class="op">==</span><span class="st"> &quot;Gunshot&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># look at firearm dealths</span>
-<span class="st">  </span><span class="kw">group_by</span>(state, armed, raceethnicity) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
-<span class="st">  </span><span class="kw">tally</span>() <span class="co"># just count the number of observations in each of the grouped categories</span>
-<span class="kw">head</span>(fatal_gunshot)</code></pre></div>
-<pre><code>## # A tibble: 6 x 4
-## # Groups:   state, armed [3]
-##   state armed   raceethnicity       n
-##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;           &lt;int&gt;
-## 1 AK    Firearm Hispanic/Latino     1
-## 2 AK    Firearm Native American     5
-## 3 AK    Firearm White               2
-## 4 AK    Knife   Native American     1
-## 5 AK    Knife   White               1
-## 6 AK    Other   White               1</code></pre>
+<span class="co"># install.packages(&quot;openintro&quot;)</span>
+<span class="kw">library</span>(openintro)</code></pre></div>
+<pre><code>## Please visit openintro.org for free statistics materials</code></pre>
+<pre><code>## 
+## Attaching package: 'openintro'</code></pre>
+<pre><code>## The following object is masked _by_ '.GlobalEnv':
+## 
+##     census</code></pre>
+<pre><code>## The following objects are masked from 'package:datasets':
+## 
+##     cars, trees</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">counted1516 &lt;-<span class="st"> </span><span class="kw">rbind</span>(counted15, counted16)
+counted1516<span class="op">$</span>state &lt;-<span class="kw">toupper</span>(<span class="kw">abbr2state</span>(counted1516<span class="op">$</span>state))
+<span class="kw">head</span>(counted1516)</code></pre></div>
+<pre><code>##   uid              name age gender          raceethnicity   month day year
+## 1   2   Matthew Ajibade  22   Male                  Black January   1 2015
+## 2   4      Lewis Lembke  47   Male                  White January   2 2015
+## 3   5 Michael Kocher Jr  19   Male                  White January   3 2015
+## 4   6     John Quintero  23   Male        Hispanic/Latino January   3 2015
+## 5   7       Tim Elliott  53   Male Asian/Pacific Islander January   2 2015
+## 6   8   Matthew Hoffman  32   Male                  White January   4 2015
+##          streetaddress          city      state    classification
+## 1 1050 Carl Griffin Dr      Savannah    GEORGIA  Death in custody
+## 2 4505 SW Masters Loop         Aloha     OREGON           Gunshot
+## 3   2600 Kaumualii Hwy     Kaumakani     HAWAII Struck by vehicle
+## 4 500 North Oliver Ave       Wichita     KANSAS           Gunshot
+## 5 600 E Island Lake Dr       Shelton WASHINGTON           Gunshot
+## 6      630 Valencia St San Francisco CALIFORNIA           Gunshot
+##                 lawenforcementagency              armed
+## 1    Chatham County Sheriff's Office                 No
+## 2 Washington County Sheriff's Office            Firearm
+## 3            Kauai Police Department                 No
+## 4          Wichita Police Department                 No
+## 5      Mason County Sheriff's Office            Firearm
+## 6    San Francisco Police Department Non-lethal firearm</code></pre>
 </div>
 <div id="unemployment-data" class="section level2">
 <h2>5. Unemployment Data</h2>
@@ -620,9 +647,50 @@ unemployment<span class="op">$</span>rank &lt;-<span class="st"> </span>datavalu
 ## 5         Hawaii  3.6    5
 ## 6           Utah  3.6    5</code></pre>
 </div>
+<div id="population-density-2015" class="section level2">
+<h2>6. Population Density 2015</h2>
+<p>We can calculate total 2015 population from the census data and import land area to calculate population density.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
+totalPop &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>, SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span> ) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin &amp; sex to &quot;Total&quot; so we don't have repeats in the data.</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">total =</span> <span class="kw">sum</span>(POPESTIMATE2015)) <span class="co">#divide total male by total </span>
+landSqMi &lt;-<span class="st"> </span>land <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(Areaname,LND110210D) <span class="co"># I selected LND110210D because I looked at the data table at https://www.census.gov/geo/reference/state-area.html and compared values to find the correct column. This one corresponds to land area in square miles</span>
+
+<span class="co"># Now we just need to do an inner merge on the state and areaname so that we just get the area for each state.</span>
+<span class="kw">names</span>(landSqMi) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;NAME&quot;</span>, <span class="st">&quot;LandAreaSqMiles&quot;</span>)
+landSqMi<span class="op">$</span>NAME &lt;-<span class="st"> </span><span class="kw">toupper</span>(landSqMi<span class="op">$</span>NAME) <span class="co"># need to make both columns </span>
+totalPop<span class="op">$</span>NAME &lt;-<span class="st"> </span><span class="kw">toupper</span>(totalPop<span class="op">$</span>NAME)
+popdensity &lt;-<span class="st"> </span><span class="kw">merge</span>(totalPop,landSqMi,<span class="dt">by=</span><span class="st">&quot;NAME&quot;</span>)
+popdensity<span class="op">$</span>density &lt;-<span class="st"> </span>popdensity<span class="op">$</span>total<span class="op">/</span>popdensity<span class="op">$</span>LandAreaSqMiles
+<span class="kw">head</span>(popdensity)</code></pre></div>
+<pre><code>##         NAME    total LandAreaSqMiles    density
+## 1    ALABAMA  4850858        50645.33  95.780954
+## 2     ALASKA   737979       570640.95   1.293246
+## 3    ARIZONA  6802262       113594.08  59.882188
+## 4   ARKANSAS  2975626        52035.48  57.184559
+## 5 CALIFORNIA 39032444       155779.22 250.562585
+## 6   COLORADO  5440445       103641.89  52.492723</code></pre>
+</div>
 </div>
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory data analysis</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># &quot;We calculated descriptive statistics for the proportion of victims that were male, armed, and non-White.&quot;</span>
+fatal_gunshot &lt;-<span class="st"> </span>counted1516 <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(classification <span class="op">==</span><span class="st"> &quot;Gunshot&quot;</span>,raceethnicity <span class="op">!=</span><span class="st"> &quot;white&quot;</span>, armed <span class="op">!=</span><span class="st"> &quot;No&quot;</span>, gender <span class="op">==</span><span class="st"> &quot;Male&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(state) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
+<span class="st">  </span><span class="kw">tally</span>() <span class="co"># just count the number of observations in each of the grouped categories</span>
+<span class="kw">head</span>(fatal_gunshot)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   state          n
+##   &lt;chr&gt;      &lt;int&gt;
+## 1 ALABAMA       37
+## 2 ALASKA        11
+## 3 ARIZONA       76
+## 4 ARKANSAS      20
+## 5 CALIFORNIA   274
+## 6 COLORADO      56</code></pre>
 </div>
 <div id="data-analysis" class="section level1">
 <h1>Data analysis</h1>
