@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Motivation
 Here we will recreate a study completed by the American Journal of Public Health "to examine whether stricter firearm legislation is associated with rates of fatal police shootings." https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770
+The bulk of the case study will be collecting, cleaning, manipulating and merging data in order to control for potential covariates.
 
 # What is the data?
 This study uses data from several different sources.
