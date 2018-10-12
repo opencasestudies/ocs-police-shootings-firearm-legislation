@@ -249,9 +249,12 @@ div.tocify {
 </div>
 
 
+<div id="alexandra-stephens" class="section level3">
+<h3>Alexandra Stephens</h3>
+</div>
 <div id="motivation" class="section level1">
 <h1>Motivation</h1>
-<p>Here we will recreate a study completed by the American Journal of Public Health “to examine whether stricter firearm legislation is associated with rates of fatal police shootings.” <a href="https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770" class="uri">https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770</a> The bulk of the case study will be collecting, cleaning, manipulating and merging data in order to control for potential covariates.</p>
+<p>Here we will recreate a study completed by the American Journal of Public Health “to examine whether stricter firearm legislation is associated with rates of fatal police shootings.” (<a href="https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770" class="uri">https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770</a>) The bulk of the case study will be collecting, cleaning, manipulating and merging data in order to control for potential covariates. Then we will perform a poisson regression as well as statistical significance tests.</p>
 </div>
 <div id="what-is-the-data" class="section level1">
 <h1>What is the data?</h1>
@@ -259,7 +262,7 @@ div.tocify {
 <ol style="list-style-type: decimal">
 <li>The Brady Campain State Scorecard from 2015. This provides numerical scores for each state across different types of firearm legislation. Obtained at <a href="http://crimadvisor.com/data/Brady-State-Scorecard-2015.pdf" class="uri">http://crimadvisor.com/data/Brady-State-Scorecard-2015.pdf</a>.</li>
 <li>The Counted: People killed by police in the US. Because “the US government has no comprehensive record of the number of people killed by law enforcement,” The Counted project started and is known as a more accurate source for this data. <a href="https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted" class="uri">https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted</a>.</li>
-<li>Sociodemographic data, such as age, race, gender, and total population by state obtained from the US Census.<a href="https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html" class="uri">https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html</a>.</li>
+<li>Population characteristics by state obtained from the US Census <a href="https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html" class="uri">https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html</a>.</li>
 <li>Violent crime data in 2015 by state.Obtained from the FBI’s Uniform crime report <a href="https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5" class="uri">https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5</a>.</li>
 <li>Unemployment rate data: <a href="https://www.bls.gov/lau/lastrk15.htm" class="uri">https://www.bls.gov/lau/lastrk15.htm</a></li>
 <li>To calculate population density in 2015, we must import land area data from the US census (2010 land area data). <a href="https://www.census.gov/support/USACdataDownloads.html#LND" class="uri">https://www.census.gov/support/USACdataDownloads.html#LND</a></li>
@@ -268,8 +271,8 @@ div.tocify {
 </div>
 <div id="data-import" class="section level1">
 <h1>Data import</h1>
+<p>We import the Census population characteristics data, Brady Campaign Scorecard (2015), The Counted data for the years of 2015 and 2016, the FBI’s crime report for 2015, and land area by state from the Census. These files were downloaded from their respective websites listed in the above section “What is the data?”</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(readxl)
-<span class="co">#census data</span>
 census &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;sc-est2017-alldata6.csv&quot;</span>,<span class="dt">nrows =</span> <span class="dv">236900</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
 <span class="kw">head</span>(census[, <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>])</code></pre></div>
 <pre><code>##   SUMLEV REGION DIVISION STATE    NAME
@@ -279,8 +282,7 @@ census &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span clas
 ## 4     40      3        6     1 Alabama
 ## 5     40      3        6     1 Alabama
 ## 6     40      3        6     1 Alabama</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Brady scores</span>
-brady &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;Brady-State-Scorecard-2015.xlsx&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">brady &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;Brady-State-Scorecard-2015.xlsx&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>)
 <span class="kw">head</span>(brady[, <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>])</code></pre></div>
 <pre><code>## # A tibble: 6 x 5
 ##   `States can receive a m… `Category Points` `Sub Category P… Points AL   
@@ -291,8 +293,7 @@ brady &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span cla
 ## 4 Background Checks on Al…                NA               NA     25 &lt;NA&gt; 
 ## 5 Background Checks on Al…                NA               NA     20 &lt;NA&gt; 
 ## 6 Background Checks on Al…                NA               NA      5 &lt;NA&gt;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># The Counted data</span>
-counted15 &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;the-counted-2015.csv&quot;</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">counted15 &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;the-counted-2015.csv&quot;</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
 counted16 &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;the-counted-2016.csv&quot;</span>,<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
 <span class="kw">head</span>(counted15)</code></pre></div>
 <pre><code>##   gender          raceethnicity state    classification
@@ -309,8 +310,7 @@ counted16 &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span c
 ## 4          Wichita Police Department                 No
 ## 5      Mason County Sheriff's Office            Firearm
 ## 6    San Francisco Police Department Non-lethal firearm</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Crime data</span>
-crime &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;table_5_crime_in_the_united_states_by_state_2015.xls&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>,<span class="dt">skip =</span> <span class="dv">3</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">crime &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;table_5_crime_in_the_united_states_by_state_2015.xls&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>,<span class="dt">skip =</span> <span class="dv">3</span>)
 <span class="kw">head</span>(crime[, <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>])</code></pre></div>
 <pre><code>## # A tibble: 6 x 5
 ##   State  Area                X__1          Population     `Violent\ncrime…
@@ -321,8 +321,7 @@ crime &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span cla
 ## 4 &lt;NA&gt;   Cities outside met… &lt;NA&gt;          522241                       NA
 ## 5 &lt;NA&gt;   &lt;NA&gt;                Area actuall… 0.97399999999…             3178
 ## 6 &lt;NA&gt;   &lt;NA&gt;                Estimated to… 1                          3240</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Land area data</span>
-land &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;LND01.xls&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">land &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;LND01.xls&quot;</span>, <span class="dt">sheet =</span> <span class="dv">1</span>)
 <span class="kw">head</span>(land[, <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>])</code></pre></div>
 <pre><code>## # A tibble: 6 x 5
 ##   Areaname      STCOU LND010190F LND010190D LND010190N1
@@ -338,7 +337,8 @@ land &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span clas
 <h1>Data wrangling</h1>
 <div id="census-data" class="section level2">
 <h2>1. Census Data</h2>
-<p>We need to find “age; percentage of study population that was male, White, Black, Hispanic, … at the state level” using the census data.</p>
+<div id="percent-male" class="section level3">
+<h3>Percent Male</h3>
 <p>The following is taken from the document sc-est2017-alldata6.pdf:</p>
 <ul>
 <li>The key for SEX is as follows:
@@ -362,7 +362,7 @@ land &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span clas
 <li>5 = Native Hawaiian and Other Pacific Islander Alone 6 = Two or more races</li>
 </ul></li>
 </ul>
-<p>So we need to group the data in several different ways and calculate the necessary statistics. Let’s start with “percentage of the study population that was male.” For each state, we need to add every row of data that is “male” (SEX = 1) in the column POPESTIMATE2015 since we are looking at the year 2015.</p>
+<p>So we need to group the data in several different ways and calculate the necessary statistics. Let’s start with “percentage of the study population that was male.” For each state, we need to add every row of data that is “male” (SEX = 1) in the column POPESTIMATE2015 since we are looking at the year 2015. We set the ORIGIN equal to 0 so that we do not add duplicate data, since 0 is the key for both Hispanic and non Hispanic residents. We group by each state since we want the percentage of male resendents in each state. We set the column “percentMale” to be the total male population divided by the total population in each state and then multiplied by 100 to get a percentage.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)</code></pre></div>
 <pre><code>## 
 ## Attaching package: 'dplyr'</code></pre>
@@ -373,9 +373,9 @@ land &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span clas
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">maleStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin to &quot;Total&quot; so we don't have repeats in the data.</span>
-<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">percentMale =</span> <span class="kw">sum</span>(POPESTIMATE2015[SEX<span class="op">==</span><span class="dv">1</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015[SEX<span class="op">==</span><span class="dv">0</span>])<span class="op">*</span><span class="dv">100</span>) <span class="co">#divide total male by total  population</span>
+<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">percentMale =</span> <span class="kw">sum</span>(POPESTIMATE2015[SEX<span class="op">==</span><span class="dv">1</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015[SEX<span class="op">==</span><span class="dv">0</span>])<span class="op">*</span><span class="dv">100</span>)
 <span class="kw">head</span>(maleStats)</code></pre></div>
 <pre><code>## # A tibble: 6 x 2
 ##   NAME       percentMale
@@ -386,19 +386,16 @@ land &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span clas
 ## 4 Arkansas          49.1
 ## 5 California        49.7
 ## 6 Colorado          50.3</code></pre>
-<p>Next let’s tackle age. We need to find the median age for each state. This is tricky, since we don’t have a list of ages (i.e., (22,55,4,27,35)) but instead we have the counts of the age. First we need to get the total counts for each age (per state), since that’s divided up into all the other categories.</p>
+</div>
+<div id="median-age" class="section level3">
+<h3>Median Age</h3>
+<p>First we need to get the total counts for each age (per state), since that’s divided up into all the other categories. Set origin and sex to “Total” so we don’t have repeats in the data. Group by state and age since these are the two factors we need to keep seperated. The column sumAges is the total residents in each specified state at each age year.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
 <span class="kw">library</span>(tidyr)
-<span class="kw">library</span>(data.table)</code></pre></div>
-<pre><code>## 
-## Attaching package: 'data.table'</code></pre>
-<pre><code>## The following objects are masked from 'package:dplyr':
-## 
-##     between, first, last</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ageStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>,SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin and sex to &quot;Total&quot; so we don't have repeats in the data.</span>
-<span class="st">  </span><span class="kw">group_by</span>(NAME,AGE) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by state and age</span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">sumAges =</span> <span class="kw">sum</span>(POPESTIMATE2015)) <span class="co">#divide total male by total  population</span>
+ageStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>,SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME,AGE) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">sumAges =</span> <span class="kw">sum</span>(POPESTIMATE2015))
 <span class="kw">head</span>(ageStats)</code></pre></div>
 <pre><code>## # A tibble: 6 x 3
 ## # Groups:   NAME [1]
@@ -410,15 +407,27 @@ land &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span clas
 ## 4 Alabama     3   58800
 ## 5 Alabama     4   59329
 ## 6 Alabama     5   59610</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># transform matrix to have state names as column heaeders</span>
-ageStats &lt;-<span class="st"> </span><span class="kw">dcast</span>(<span class="kw">setDT</span>(ageStats), AGE <span class="op">~</span><span class="st"> </span>NAME, <span class="dt">value.var=</span><span class="st">&quot;sumAges&quot;</span>)
-ageStats<span class="op">$</span>AGE &lt;-<span class="st"> </span><span class="ot">NULL</span> <span class="co">#get rid of the age columns since we can just use the index minus 1</span>
-ageStats &lt;-<span class="st"> </span><span class="kw">apply</span>(ageStats, <span class="dv">2</span>, cumsum) <span class="co"># take the cumulative sum of each column</span>
-ageStats &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(ageStats) <span class="co"># convert back to a dataframe</span>
-ageStats &lt;-<span class="st"> </span><span class="kw">apply</span>(ageStats,<span class="dv">2</span>,<span class="cf">function</span>(x) x<span class="op">/</span>x[<span class="dv">86</span>]) <span class="co"># divide each column by the last value, showing the cumulative sum at that age as a percentile</span>
-ageStats &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(ageStats) <span class="co"># convert back to a dataframe</span>
-<span class="co"># now we have a percentile associated with each age</span>
-<span class="co"># now we just need to get the age of the 50th percentile for each state...</span>
+<p>We begin to see that finding the median is tricky, since we don’t have a nice list of ages (i.e., [22,55,4,27,…,35]) for each state, in which case we could simply use a built in R “median” function. Instead we have the number of people that are ages 0-85+ in each state. For example, the first row of data above says that in Alabama (in 2015), there are 59080 residents that are 0 years old.</p>
+<p>First let us transform the matrix to have each state as a column name with the sumAges data underneath. I.e., right now we have a 51*86 by 3 dataframe, and instaed we want a 51 by 86 dataframe. I removed the age column since we can use the index instead (index minus 1, since R dataframes are indexed from 1 and the ages start at 0).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(data.table)</code></pre></div>
+<pre><code>## 
+## Attaching package: 'data.table'</code></pre>
+<pre><code>## The following objects are masked from 'package:dplyr':
+## 
+##     between, first, last</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ageStats &lt;-<span class="st"> </span><span class="kw">dcast</span>(<span class="kw">setDT</span>(ageStats), AGE <span class="op">~</span><span class="st"> </span>NAME, <span class="dt">value.var=</span><span class="st">&quot;sumAges&quot;</span>)
+ageStats<span class="op">$</span>AGE &lt;-<span class="st"> </span><span class="ot">NULL</span>
+<span class="kw">head</span>(ageStats[,<span class="dv">0</span><span class="op">:</span><span class="dv">5</span>])</code></pre></div>
+<pre><code>##    Alabama Alaska Arizona Arkansas California
+## 1:   59080  11253   86653    38453     500834
+## 2:   58738  11109   86758    38005     499070
+## 3:   57957  11009   86713    37711     499614
+## 4:   58800  10756   86914    38381     498536
+## 5:   59329  10895   87624    38443     510026
+## 6:   59610  10537   87234    38582     498754</code></pre>
+<p>Now that we’ve made the data easier to work with, we need to find a way to get the median. One method is to take the cumulative sum of each column and then divide all the rows by the last row in each repective column, calculating a percentile/quantile for each age. Then, we need to find the age in each state where the population exceeds the 50th percentile (the median!) for the first time.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ageStats &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">apply</span>(ageStats, <span class="dv">2</span>, cumsum))
+ageStats &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">apply</span>(ageStats,<span class="dv">2</span>,<span class="cf">function</span>(x) x<span class="op">/</span>x[<span class="dv">86</span>]))
 <span class="kw">head</span>(ageStats[, <span class="dv">1</span><span class="op">:</span><span class="dv">6</span>])</code></pre></div>
 <pre><code>##      Alabama     Alaska    Arizona   Arkansas California   Colorado
 ## 1 0.01217929 0.01524840 0.01273885 0.01292266 0.01283122 0.01217217
@@ -427,167 +436,144 @@ ageStats &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(age
 ## 4 0.04835742 0.05979438 0.05101803 0.05126652 0.05118957 0.04888552
 ## 5 0.06058804 0.07455768 0.06389963 0.06418582 0.06425629 0.06146593
 ## 6 0.07287659 0.08883586 0.07672389 0.07715183 0.07703422 0.07429999</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">median &lt;-<span class="st"> </span><span class="kw">apply</span>(ageStats,<span class="dv">2</span>,<span class="cf">function</span>(x) <span class="kw">which.max</span>(x <span class="op">&gt;=</span><span class="st"> </span><span class="fl">0.5</span>)<span class="op">-</span><span class="dv">1</span>) 
-medians &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(median)
-<span class="kw">head</span>(medians)</code></pre></div>
-<pre><code>##            median
-## Alabama        38
-## Alaska         33
-## Arizona        37
-## Arkansas       37
-## California     36
-## Colorado       36</code></pre>
-<p>Find the proportion of White, Black, and Hispanic residents per state.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
-raceStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>, SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin and sex to &quot;Total&quot; so we don't have repeats in the data.</span>
-<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">median &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">apply</span>(ageStats,<span class="dv">2</span>,<span class="cf">function</span>(x) <span class="kw">which.max</span>(x <span class="op">&gt;=</span><span class="st"> </span><span class="fl">0.5</span>)<span class="op">-</span><span class="dv">1</span>))
+<span class="kw">head</span>(median)</code></pre></div>
+<pre><code>##            apply(ageStats, 2, function(x) which.max(x &gt;= 0.5) - 1)
+## Alabama                                                         38
+## Alaska                                                          33
+## Arizona                                                         37
+## Arkansas                                                        37
+## California                                                      36
+## Colorado                                                        36</code></pre>
+</div>
+<div id="percent-white-black-and-hispanic" class="section level3">
+<h3>Percent White, Black, and Hispanic</h3>
+<p>This is a simple calculation similar to caculating the percentage of male residents above.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># library(dplyr)</span>
+race_origin_stats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>, SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarize</span>(<span class="dt">percentWhite =</span> <span class="kw">sum</span>(POPESTIMATE2015[RACE<span class="op">==</span><span class="dv">1</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015)<span class="op">*</span><span class="dv">100</span>,
             <span class="dt">percentBlack =</span> <span class="kw">sum</span>(POPESTIMATE2015[RACE<span class="op">==</span><span class="dv">2</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015)<span class="op">*</span><span class="dv">100</span>) 
-<span class="kw">head</span>(raceStats)</code></pre></div>
-<pre><code>## # A tibble: 6 x 3
-##   NAME       percentWhite percentBlack
-##   &lt;chr&gt;             &lt;dbl&gt;        &lt;dbl&gt;
-## 1 Alabama            69.5        26.7 
-## 2 Alaska             66.5         3.67
-## 3 Arizona            83.5         4.80
-## 4 Arkansas           79.6        15.7 
-## 5 California         73.0         6.49
-## 6 Colorado           87.6         4.47</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">originStats &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin and sex to &quot;Total&quot; so we don't have repeats in the data.</span>
-<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">percentHispanic =</span> <span class="kw">sum</span>(POPESTIMATE2015[ORIGIN<span class="op">==</span><span class="dv">2</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015[ORIGIN<span class="op">==</span><span class="dv">0</span>])<span class="op">*</span><span class="dv">100</span>)
-<span class="kw">head</span>(originStats)</code></pre></div>
-<pre><code>## # A tibble: 6 x 2
-##   NAME       percentHispanic
-##   &lt;chr&gt;                &lt;dbl&gt;
-## 1 Alabama               4.13
-## 2 Alaska                6.82
-## 3 Arizona              30.9 
-## 4 Arkansas              7.18
-## 5 California           38.7 
-## 6 Colorado             21.3</code></pre>
+
+race_origin_stats<span class="op">$</span>percentHispanic &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">x =</span> <span class="kw">sum</span>(POPESTIMATE2015[ORIGIN<span class="op">==</span><span class="dv">2</span>])<span class="op">/</span><span class="kw">sum</span>(POPESTIMATE2015[ORIGIN<span class="op">==</span><span class="dv">0</span>])<span class="op">*</span><span class="dv">100</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">pull</span>(x)
+
+<span class="kw">head</span>(race_origin_stats)</code></pre></div>
+<pre><code>## # A tibble: 6 x 4
+##   NAME       percentWhite percentBlack percentHispanic
+##   &lt;chr&gt;             &lt;dbl&gt;        &lt;dbl&gt;           &lt;dbl&gt;
+## 1 Alabama            69.5        26.7             4.13
+## 2 Alaska             66.5         3.67            6.82
+## 3 Arizona            83.5         4.80           30.9 
+## 4 Arkansas           79.6        15.7             7.18
+## 5 California         73.0         6.49           38.7 
+## 6 Colorado           87.6         4.47           21.3</code></pre>
+</div>
 </div>
 <div id="violent-crime" class="section level2">
 <h2>2. Violent Crime</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
-<span class="kw">library</span>(zoo)</code></pre></div>
+<p>First print the names of the columns to see that there are some extraneous characters not visible in the dataframe. Use the column index to select columns instead of the complicated names. Also, print a section violent crime to observe the X__1 group we are looking for – “Rate per 100,000 inhabitants” (per the study.)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#library(dplyr)</span>
+<span class="kw">colnames</span>(crime)</code></pre></div>
+<pre><code>##  [1] &quot;State&quot;                                   
+##  [2] &quot;Area&quot;                                    
+##  [3] &quot;X__1&quot;                                    
+##  [4] &quot;Population&quot;                              
+##  [5] &quot;Violent\ncrime1&quot;                         
+##  [6] &quot;Murder and \nnonnegligent \nmanslaughter&quot;
+##  [7] &quot;Rape\n(revised\ndefinition)2&quot;            
+##  [8] &quot;Rape\n(legacy\ndefinition)3&quot;             
+##  [9] &quot;Robbery&quot;                                 
+## [10] &quot;Aggravated \nassault&quot;                    
+## [11] &quot;Property \ncrime&quot;                        
+## [12] &quot;Burglary&quot;                                
+## [13] &quot;Larceny-\ntheft&quot;                         
+## [14] &quot;Motor \nvehicle \ntheft&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">violentcrime&lt;-<span class="st"> </span>crime[ , <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">5</span>)]
+violentcrime[<span class="dv">11</span>, ]</code></pre></div>
+<pre><code>## # A tibble: 1 x 3
+##   State X__1                         `Violent\ncrime1`
+##   &lt;chr&gt; &lt;chr&gt;                                    &lt;dbl&gt;
+## 1 &lt;NA&gt;  Rate per 100,000 inhabitants              472.</code></pre>
+<p>We need get all rows where X__1 = Rate per 100,000 inhabitants. However, as we can see above, the value for “State” in these rows is NA. We need to fill that value with the state name that is listed in a previous row. Then we can select the rows where X__1 = Rate per 100,000 inhabitants. After that, we no longer need the column X__1, so we can remove it.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(zoo)</code></pre></div>
 <pre><code>## 
 ## Attaching package: 'zoo'</code></pre>
 <pre><code>## The following objects are masked from 'package:base':
 ## 
 ##     as.Date, as.Date.numeric</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(crime)</code></pre></div>
-<pre><code>## # A tibble: 6 x 14
-##   State Area  X__1  Population `Violent\ncrime… `Murder and \nn…
-##   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;                 &lt;dbl&gt;            &lt;dbl&gt;
-## 1 ALAB… Metr… &lt;NA&gt;  3708033                  NA               NA
-## 2 &lt;NA&gt;  &lt;NA&gt;  Area… 0.9709999…            18122              283
-## 3 &lt;NA&gt;  &lt;NA&gt;  Esti… 1                     18500              287
-## 4 &lt;NA&gt;  Citi… &lt;NA&gt;  522241                   NA               NA
-## 5 &lt;NA&gt;  &lt;NA&gt;  Area… 0.9739999…             3178               32
-## 6 &lt;NA&gt;  &lt;NA&gt;  Esti… 1                      3240               33
-## # ... with 8 more variables: `Rape\n(revised\ndefinition)2` &lt;dbl&gt;,
-## #   `Rape\n(legacy\ndefinition)3` &lt;dbl&gt;, Robbery &lt;dbl&gt;, `Aggravated
-## #   \nassault` &lt;dbl&gt;, `Property \ncrime` &lt;dbl&gt;, Burglary &lt;dbl&gt;,
-## #   `Larceny-\ntheft` &lt;dbl&gt;, `Motor \nvehicle \ntheft` &lt;dbl&gt;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Selecting &quot;Violent crime1&quot; was not working, so I printed &quot;colnames(crime)&quot; to see that there are some extraneous characters in the names. Instead I take the index from the column names. I also could probably just select the index of the columns.</span>
-violentcrime&lt;-<span class="st"> </span>crime <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">select</span>(<span class="st">&quot;State&quot;</span>,<span class="kw">colnames</span>(crime)[<span class="dv">3</span>], <span class="kw">colnames</span>(crime)[<span class="dv">5</span>]) 
-violentcrime[<span class="dv">10</span><span class="op">:</span><span class="dv">20</span>,] </code></pre></div>
-<pre><code>## # A tibble: 11 x 3
-##    State  X__1                         `Violent\ncrime1`
-##    &lt;chr&gt;  &lt;chr&gt;                                    &lt;dbl&gt;
-##  1 &lt;NA&gt;   &lt;NA&gt;                                    22952 
-##  2 &lt;NA&gt;   Rate per 100,000 inhabitants              472.
-##  3 ALASKA &lt;NA&gt;                                       NA 
-##  4 &lt;NA&gt;   Area actually reporting                  3464 
-##  5 &lt;NA&gt;   &lt;NA&gt;                                       NA 
-##  6 &lt;NA&gt;   Area actually reporting                   886 
-##  7 &lt;NA&gt;   Estimated total                           913 
-##  8 &lt;NA&gt;   &lt;NA&gt;                                       NA 
-##  9 &lt;NA&gt;   Area actually reporting                  1015 
-## 10 &lt;NA&gt;   &lt;NA&gt;                                     5392 
-## 11 &lt;NA&gt;   Rate per 100,000 inhabitants              730.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#violentcrime$State &lt;- na.locf(violentcrime$State)</span>
-<span class="co">#(violentcrime)</span>
-violentcrime2&lt;-<span class="st"> </span>violentcrime <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">group_by</span>(State) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span>na.locf <span class="op">%&gt;%</span>
-<span class="st">  </span>ungroup
-violentcrime2[<span class="dv">10</span><span class="op">:</span><span class="dv">20</span>,] </code></pre></div>
-<pre><code>## # A tibble: 11 x 3
-##    State   X__1                         `Violent\ncrime1`
-##    &lt;chr&gt;   &lt;chr&gt;                        &lt;chr&gt;            
-##  1 ALABAMA Estimated total              &quot; 22952.0&quot;       
-##  2 ALABAMA Rate per 100,000 inhabitants &quot;   472.4&quot;       
-##  3 ALASKA  Rate per 100,000 inhabitants &quot;   472.4&quot;       
-##  4 ALASKA  Area actually reporting      &quot;  3464.0&quot;       
-##  5 ALASKA  Area actually reporting      &quot;  3464.0&quot;       
-##  6 ALASKA  Area actually reporting      &quot;   886.0&quot;       
-##  7 ALASKA  Estimated total              &quot;   913.0&quot;       
-##  8 ALASKA  Estimated total              &quot;   913.0&quot;       
-##  9 ALASKA  Area actually reporting      &quot;  1015.0&quot;       
-## 10 ALASKA  Area actually reporting      &quot;  5392.0&quot;       
-## 11 ALASKA  Rate per 100,000 inhabitants &quot;   730.2&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Hmm..I don't want to fill na for the other columns just yet because now there are duplicate rows with different states, making it confusing.</span>
-<span class="co"># Let's do a quick fix</span>
-violentcrime<span class="op">$</span>State &lt;-<span class="st"> </span>violentcrime2<span class="op">$</span>State
-violentcrime[<span class="dv">10</span><span class="op">:</span><span class="dv">20</span>,]</code></pre></div>
-<pre><code>## # A tibble: 11 x 3
-##    State   X__1                         `Violent\ncrime1`
-##    &lt;chr&gt;   &lt;chr&gt;                                    &lt;dbl&gt;
-##  1 ALABAMA &lt;NA&gt;                                    22952 
-##  2 ALABAMA Rate per 100,000 inhabitants              472.
-##  3 ALASKA  &lt;NA&gt;                                       NA 
-##  4 ALASKA  Area actually reporting                  3464 
-##  5 ALASKA  &lt;NA&gt;                                       NA 
-##  6 ALASKA  Area actually reporting                   886 
-##  7 ALASKA  Estimated total                           913 
-##  8 ALASKA  &lt;NA&gt;                                       NA 
-##  9 ALASKA  Area actually reporting                  1015 
-## 10 ALASKA  &lt;NA&gt;                                     5392 
-## 11 ALASKA  Rate per 100,000 inhabitants              730.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># I really want the &quot;Rate per 100,000 inhabitants&quot; for violent crime for each state.</span>
-violentcrime&lt;-<span class="st"> </span><span class="kw">subset</span>(violentcrime, X__<span class="dv">1</span> <span class="op">==</span><span class="st"> &quot;Rate per 100,000 inhabitants&quot;</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">violentcrime<span class="op">$</span>State &lt;-<span class="st"> </span><span class="kw">na.locf</span>(violentcrime<span class="op">$</span>State)
+violentcrime[<span class="dv">11</span>, ]</code></pre></div>
+<pre><code>## # A tibble: 1 x 3
+##   State   X__1                         `Violent\ncrime1`
+##   &lt;chr&gt;   &lt;chr&gt;                                    &lt;dbl&gt;
+## 1 ALABAMA Rate per 100,000 inhabitants              472.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">violentcrime&lt;-<span class="st"> </span><span class="kw">subset</span>(violentcrime, X__<span class="dv">1</span> <span class="op">==</span><span class="st"> &quot;Rate per 100,000 inhabitants&quot;</span>)
 violentcrime<span class="op">$</span>X__<span class="dv">1</span> &lt;-<span class="st"> </span><span class="ot">NULL</span>
-<span class="kw">names</span>(violentcrime) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;State&quot;</span>, <span class="st">&quot;Violent_Crime_rate_per_100,000&quot;</span>)
+<span class="kw">names</span>(violentcrime) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;State&quot;</span>, <span class="st">&quot;violent_crime&quot;</span>)
 <span class="kw">head</span>(violentcrime)</code></pre></div>
 <pre><code>## # A tibble: 6 x 2
-##   State      `Violent_Crime_rate_per_100,000`
-##   &lt;chr&gt;                                 &lt;dbl&gt;
-## 1 ALABAMA                                472.
-## 2 ALASKA                                 730.
-## 3 ARIZONA                                410.
-## 4 ARKANSAS                               521.
-## 5 CALIFORNIA                             426.
-## 6 COLORADO                               321</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Looking at our dataframe we can see some of the state names have numbers in them. This will make it hard to later merge this data together, so we should clean this up.</span>
-violentcrime<span class="op">$</span>State&lt;-<span class="kw">gsub</span>(<span class="st">'[0-9]+'</span>, <span class="st">''</span>, violentcrime<span class="op">$</span>State)</code></pre></div>
+##   State      violent_crime
+##   &lt;chr&gt;              &lt;dbl&gt;
+## 1 ALABAMA             472.
+## 2 ALASKA              730.
+## 3 ARIZONA             410.
+## 4 ARKANSAS            521.
+## 5 CALIFORNIA          426.
+## 6 COLORADO            321</code></pre>
+<p>Looking at our whole dataframe we can see some of the state names have numbers in them (an example is printed below). This will make it hard to later merge this data together, so we should clean this up.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">violentcrime<span class="op">$</span>State[<span class="dv">20</span>]</code></pre></div>
+<pre><code>## [1] &quot;MAINE6&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">violentcrime<span class="op">$</span>State&lt;-<span class="kw">gsub</span>(<span class="st">'[0-9]+'</span>, <span class="st">''</span>, violentcrime<span class="op">$</span>State)
+violentcrime<span class="op">$</span>State[<span class="dv">20</span>]</code></pre></div>
+<pre><code>## [1] &quot;MAINE&quot;</code></pre>
 </div>
 <div id="brady-scores" class="section level2">
 <h2>3. Brady Scores</h2>
 <p>The study by AJPH groups the scores by the 7 categories. It is also important to note that the study removed all weightings of the different laws in favor of a “1 law 1 point” system, since the weightings were “somewhat arbitrary.”</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#install.packages(&quot;rJava&quot;)</span>
-<span class="co">#install.packages(c(&quot;NLP&quot;, &quot;openNLP&quot;, &quot;RWeka&quot;, &quot;qdap&quot;))</span>
-<span class="kw">require</span>(rJava)</code></pre></div>
-<pre><code>## Loading required package: rJava</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(openNLP)</code></pre></div>
-<pre><code>## Loading required package: openNLP</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rJava)
-<span class="kw">library</span>(NLP)
-<span class="kw">library</span>(openNLP)
-<span class="co">#library(RWeka)</span>
-
-PHlaws &lt;-<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;supplemental table a. .txt&quot;</span>)
-blaws &lt;-<span class="st"> </span>brady[<span class="dv">1</span>]</code></pre></div>
-</div>
-<div id="the-counted-fatal-shootings" class="section level2">
-<h2>4. The Counted Fatal Shootings</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># first combine the two years of data</span>
-<span class="co"># install.packages(&quot;openintro&quot;)</span>
-<span class="kw">library</span>(openintro)</code></pre></div>
+<p>For the purpose of practice and simplification (for now), let’s just keep the first line of “total state points” from the Brady Scorecard.</p>
+<p>We need to transform the data frame so that we have a column of state names, and the total scores in another column.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(brady)</code></pre></div>
+<pre><code>## # A tibble: 6 x 54
+##   `States can rec… `Category Point… `Sub Category P… Points AL    AK   
+##   &lt;chr&gt;                       &lt;dbl&gt;            &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 TOTAL STATE POI…               NA               NA     NA -18   -30  
+## 2 CATEGORY 1:  KE…               50               NA     NA &lt;NA&gt;  &lt;NA&gt; 
+## 3 BACKGROUND CHEC…               NA               25     NA AL    AK   
+## 4 Background Chec…               NA               NA     25 &lt;NA&gt;  &lt;NA&gt; 
+## 5 Background Chec…               NA               NA     20 &lt;NA&gt;  &lt;NA&gt; 
+## 6 Background Chec…               NA               NA      5 &lt;NA&gt;  &lt;NA&gt; 
+## # ... with 48 more variables: AR &lt;chr&gt;, AZ &lt;chr&gt;, CA &lt;chr&gt;, CO &lt;chr&gt;,
+## #   CT &lt;chr&gt;, DE &lt;chr&gt;, FL &lt;chr&gt;, GA &lt;chr&gt;, HI &lt;chr&gt;, ID &lt;chr&gt;, IL &lt;chr&gt;,
+## #   IN &lt;chr&gt;, IA &lt;chr&gt;, KS &lt;chr&gt;, KY &lt;chr&gt;, LA &lt;chr&gt;, MA &lt;chr&gt;, MD &lt;chr&gt;,
+## #   ME &lt;chr&gt;, MI &lt;chr&gt;, MN &lt;chr&gt;, MO &lt;chr&gt;, MT &lt;chr&gt;, MS &lt;chr&gt;, NC &lt;chr&gt;,
+## #   ND &lt;chr&gt;, NE &lt;chr&gt;, NH &lt;chr&gt;, NJ &lt;chr&gt;, NM &lt;chr&gt;, NV &lt;chr&gt;, NY &lt;chr&gt;,
+## #   OK &lt;chr&gt;, OH &lt;chr&gt;, OR &lt;chr&gt;, PA &lt;chr&gt;, RI &lt;chr&gt;, SC &lt;chr&gt;, SD &lt;chr&gt;,
+## #   TN &lt;chr&gt;, TX &lt;chr&gt;, UT &lt;chr&gt;, VA &lt;chr&gt;, VT &lt;chr&gt;, WA &lt;chr&gt;, WI &lt;chr&gt;,
+## #   WV &lt;chr&gt;, WY &lt;chr&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">colnames</span>(brady)[<span class="dv">1</span>] &lt;-<span class="st"> &quot;Law&quot;</span>
+brady &lt;-<span class="st"> </span>brady <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(Law <span class="op">==</span><span class="st"> &quot;TOTAL STATE POINTS&quot;</span>)
+brady &lt;-<span class="st"> </span>brady[,(<span class="kw">ncol</span>(brady) <span class="op">-</span><span class="st"> </span><span class="dv">49</span>)<span class="op">:</span><span class="kw">ncol</span>(brady)]
+brady_totals &lt;-<span class="st"> </span><span class="kw">as_data_frame</span>(<span class="kw">colnames</span>(brady))
+brady_totals<span class="op">$</span>brady_totals &lt;-<span class="st"> </span><span class="kw">t</span>(brady)
+<span class="kw">colnames</span>(brady_totals)[<span class="dv">1</span>] &lt;-<span class="st"> &quot;state&quot;</span>
+<span class="kw">head</span>(brady_totals)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   state brady_totals
+##   &lt;chr&gt; &lt;chr&gt;       
+## 1 AL    -18         
+## 2 AK    -30         
+## 3 AR    -24         
+## 4 AZ    -39         
+## 5 CA    76          
+## 6 CO    22</code></pre>
+<p>In addition, this data frame’s list of states is in two-letter state abbreviations. Since this is not cohesive with the previous datasets, we should change it to make merging dataframes easier later on. We use the openintro library to do the simple conversion (found by Googling!)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(openintro)</code></pre></div>
 <pre><code>## Please visit openintro.org for free statistics materials</code></pre>
 <pre><code>## 
 ## Attaching package: 'openintro'</code></pre>
@@ -597,16 +583,30 @@ blaws &lt;-<span class="st"> </span>brady[<span class="dv">1</span>]</code></pre
 <pre><code>## The following objects are masked from 'package:datasets':
 ## 
 ##     cars, trees</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">brady_totals<span class="op">$</span>state &lt;-<span class="kw">toupper</span>(<span class="kw">abbr2state</span>(brady_totals<span class="op">$</span>state))
+<span class="kw">head</span>(brady_totals)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   state      brady_totals
+##   &lt;chr&gt;      &lt;chr&gt;       
+## 1 ALABAMA    -18         
+## 2 ALASKA     -30         
+## 3 ARKANSAS   -24         
+## 4 ARIZONA    -39         
+## 5 CALIFORNIA 76          
+## 6 COLORADO   22</code></pre>
+</div>
+<div id="the-counted-fatal-shootings" class="section level2">
+<h2>4. The Counted Fatal Shootings</h2>
+<p>First we simply need to concatenate the two years of data.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">counted1516 &lt;-<span class="st"> </span><span class="kw">rbind</span>(counted15, counted16)
-counted1516<span class="op">$</span>state &lt;-<span class="kw">toupper</span>(<span class="kw">abbr2state</span>(counted1516<span class="op">$</span>state))
 <span class="kw">head</span>(counted1516)</code></pre></div>
-<pre><code>##   gender          raceethnicity      state    classification
-## 1   Male                  Black    GEORGIA  Death in custody
-## 2   Male                  White     OREGON           Gunshot
-## 3   Male                  White     HAWAII Struck by vehicle
-## 4   Male        Hispanic/Latino     KANSAS           Gunshot
-## 5   Male Asian/Pacific Islander WASHINGTON           Gunshot
-## 6   Male                  White CALIFORNIA           Gunshot
+<pre><code>##   gender          raceethnicity state    classification
+## 1   Male                  Black    GA  Death in custody
+## 2   Male                  White    OR           Gunshot
+## 3   Male                  White    HI Struck by vehicle
+## 4   Male        Hispanic/Latino    KS           Gunshot
+## 5   Male Asian/Pacific Islander    WA           Gunshot
+## 6   Male                  White    CA           Gunshot
 ##                 lawenforcementagency              armed
 ## 1    Chatham County Sheriff's Office                 No
 ## 2 Washington County Sheriff's Office            Firearm
@@ -614,16 +614,35 @@ counted1516<span class="op">$</span>state &lt;-<span class="kw">toupper</span>(<
 ## 4          Wichita Police Department                 No
 ## 5      Mason County Sheriff's Office            Firearm
 ## 6    San Francisco Police Department Non-lethal firearm</code></pre>
+<p>Again, this data frame’s list of states is in two-letter state abbreviations so let’s change that.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#library(openintro)</span>
+counted1516<span class="op">$</span>state &lt;-<span class="kw">toupper</span>(<span class="kw">abbr2state</span>(counted1516<span class="op">$</span>state))</code></pre></div>
+<p>In the study, researchers “calculated descriptive statistics for the proportion of victims that were male, armed, and non-White.” Thus we repeat here easily with dplyr. “Tally” is used to count the number of observations in each group.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fatal_gunshot &lt;-<span class="st"> </span>counted1516 <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(classification <span class="op">==</span><span class="st"> &quot;Gunshot&quot;</span>,raceethnicity <span class="op">!=</span><span class="st"> &quot;white&quot;</span>, armed <span class="op">!=</span><span class="st"> &quot;No&quot;</span>, gender <span class="op">==</span><span class="st"> &quot;Male&quot;</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(state) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">tally</span>()
+<span class="kw">head</span>(fatal_gunshot)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   state          n
+##   &lt;chr&gt;      &lt;int&gt;
+## 1 ALABAMA       37
+## 2 ALASKA        11
+## 3 ARIZONA       76
+## 4 ARKANSAS      20
+## 5 CALIFORNIA   274
+## 6 COLORADO      56</code></pre>
 </div>
 <div id="unemployment-data" class="section level2">
 <h2>5. Unemployment Data</h2>
-<p>This data is available online, but there is no easy download of the table. It is also hard to simply copy and paste; it doesn’t hold it’s table format. Thus, let’s set up a web scraper to get the data.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># install.packages(&quot;rvest&quot;)</span>
-<span class="kw">library</span>(rvest)</code></pre></div>
+<p>This data is available online from the BLS, but there is no easy download of the table. It is also difficult to simply copy and paste; it doesn’t hold it’s table format. Thus, let’s set up a web scraper to get the data.</p>
+<p>To do this, we must use the <em>rvest</em> package. To view the HTML of a webpage, right-click and select “View page source.”</p>
+<p>Then we need to get the values from each column of the data table. <em>html_nodes</em> acts as a CSS selector. The sub0 class returns the state names, and the datavalue class corresponds to the values of both columns, Unemployment Rank and Rate. Since there is no differentiation of the two columns, and our “datavalues” alternate, we select subsets of this column to be the two seperate columns “rank” and “rate.”</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rvest)</code></pre></div>
 <pre><code>## Loading required package: xml2</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">url &lt;-<span class="st"> </span><span class="kw">read_html</span>(<span class="st">&quot;https://www.bls.gov/lau/lastrk15.htm&quot;</span>)
 datavalues &lt;-<span class="st"> </span>url<span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">html_nodes</span>(<span class="st">'.datavalue'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># html_nodes acts as a CSS selector</span>
+<span class="st">  </span><span class="kw">html_nodes</span>(<span class="st">'.datavalue'</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">html_text</span>() <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">as.numeric</span>()
 
@@ -631,37 +650,52 @@ state &lt;-<span class="st"> </span>url<span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">html_nodes</span>(<span class="st">'.sub0'</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">html_text</span>()
 
-unemployment&lt;-<span class="kw">as.data.frame</span>(state[<span class="kw">c</span>(<span class="dv">2</span><span class="op">:</span><span class="dv">52</span>)]) <span class="co"># the first listing is united states and we don't need that</span>
-<span class="co"># since &quot;datavalue&quot; was the class name for both fields, we need to seperate them by taking every other entry as rank and every other as unemployment rate</span>
-<span class="co"># skip the first two entries</span>
+unemployment&lt;-<span class="kw">as.data.frame</span>(state[<span class="kw">c</span>(<span class="dv">2</span><span class="op">:</span><span class="dv">52</span>)]) 
 rate_select &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">3</span>,<span class="dv">103</span>,<span class="dt">by=</span><span class="dv">2</span>)
 rank_select &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">4</span>,<span class="dv">104</span>,<span class="dt">by=</span><span class="dv">2</span>)
 unemployment<span class="op">$</span>rate &lt;-<span class="st"> </span>datavalues[rate_select]
 unemployment<span class="op">$</span>rank &lt;-<span class="st"> </span>datavalues[rank_select]
+<span class="kw">colnames</span>(unemployment)[<span class="dv">1</span>] &lt;-<span class="st"> &quot;state&quot;</span>
 <span class="kw">head</span>(unemployment)</code></pre></div>
-<pre><code>##   state[c(2:52)] rate rank
-## 1   North Dakota  2.8    1
-## 2       Nebraska  3.0    2
-## 3   South Dakota  3.1    3
-## 4  New Hampshire  3.4    4
-## 5         Hawaii  3.6    5
-## 6           Utah  3.6    5</code></pre>
+<pre><code>##           state rate rank
+## 1  North Dakota  2.8    1
+## 2      Nebraska  3.0    2
+## 3  South Dakota  3.1    3
+## 4 New Hampshire  3.4    4
+## 5        Hawaii  3.6    5
+## 6          Utah  3.6    5</code></pre>
 </div>
 <div id="population-density-2015" class="section level2">
 <h2>6. Population Density 2015</h2>
-<p>We can calculate total 2015 population from the census data and import land area to calculate population density.</p>
+<p>To manually find population density, we can calculate total 2015 population from the Census data and import land area to calculate population density. This is caculated because good data for state population in 2015 was not readily available.</p>
+<p>I select LND110210D because I looked at the data table at <a href="https://www.census.gov/geo/reference/state-area.html" class="uri">https://www.census.gov/geo/reference/state-area.html</a> and compared values to find the correct column. This one corresponds to land area in square miles.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr)
 totalPop &lt;-<span class="st"> </span>census <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>, SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span> ) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#set origin &amp; sex to &quot;Total&quot; so we don't have repeats in the data.</span>
-<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">total =</span> <span class="kw">sum</span>(POPESTIMATE2015)) <span class="co">#divide total male by total </span>
-landSqMi &lt;-<span class="st"> </span>land <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">select</span>(Areaname,LND110210D) <span class="co"># I selected LND110210D because I looked at the data table at https://www.census.gov/geo/reference/state-area.html and compared values to find the correct column. This one corresponds to land area in square miles</span>
+<span class="st">  </span><span class="kw">filter</span>(ORIGIN <span class="op">==</span><span class="st"> </span><span class="dv">0</span>, SEX <span class="op">==</span><span class="st"> </span><span class="dv">0</span> ) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(NAME) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">total =</span> <span class="kw">sum</span>(POPESTIMATE2015))
 
-<span class="co"># Now we just need to do an inner merge on the state and areaname so that we just get the area for each state.</span>
-<span class="kw">names</span>(landSqMi) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;NAME&quot;</span>, <span class="st">&quot;LandAreaSqMiles&quot;</span>)
-landSqMi<span class="op">$</span>NAME &lt;-<span class="st"> </span><span class="kw">toupper</span>(landSqMi<span class="op">$</span>NAME) <span class="co"># need to make both columns </span>
+landSqMi &lt;-<span class="st"> </span>land <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(Areaname,LND110210D)
+
+<span class="kw">head</span>(landSqMi)</code></pre></div>
+<pre><code>## # A tibble: 6 x 2
+##   Areaname      LND110210D
+##   &lt;chr&gt;              &lt;dbl&gt;
+## 1 UNITED STATES   3531905.
+## 2 ALABAMA           50645.
+## 3 Autauga, AL         594.
+## 4 Baldwin, AL        1590.
+## 5 Barbour, AL         885.
+## 6 Bibb, AL            623.</code></pre>
+<p>Since <em>landSqMi</em> gives us area for each town, we need to do an inner merge on the state names so that we just get the area for each state.</p>
+<p>I like to merge on columns with the same name so I rename the columns of <em>landSqMi</em> to match totalPop.</p>
+<p>Then, convert the state names to be all uppercase, since this has been the format of the majority of these datasets, and we need the row values to be exactly equivalent to merge successfully.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">names</span>(landSqMi) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;NAME&quot;</span>, <span class="st">&quot;LandAreaSqMiles&quot;</span>)
+
+landSqMi<span class="op">$</span>NAME &lt;-<span class="st"> </span><span class="kw">toupper</span>(landSqMi<span class="op">$</span>NAME)
 totalPop<span class="op">$</span>NAME &lt;-<span class="st"> </span><span class="kw">toupper</span>(totalPop<span class="op">$</span>NAME)
+
 popdensity &lt;-<span class="st"> </span><span class="kw">merge</span>(totalPop,landSqMi,<span class="dt">by=</span><span class="st">&quot;NAME&quot;</span>)
 popdensity<span class="op">$</span>density &lt;-<span class="st"> </span>popdensity<span class="op">$</span>total<span class="op">/</span>popdensity<span class="op">$</span>LandAreaSqMiles
 <span class="kw">head</span>(popdensity)</code></pre></div>
@@ -676,21 +710,6 @@ popdensity<span class="op">$</span>density &lt;-<span class="st"> </span>popdens
 </div>
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory data analysis</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># &quot;We calculated descriptive statistics for the proportion of victims that were male, armed, and non-White.&quot;</span>
-fatal_gunshot &lt;-<span class="st"> </span>counted1516 <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(classification <span class="op">==</span><span class="st"> &quot;Gunshot&quot;</span>,raceethnicity <span class="op">!=</span><span class="st"> &quot;white&quot;</span>, armed <span class="op">!=</span><span class="st"> &quot;No&quot;</span>, gender <span class="op">==</span><span class="st"> &quot;Male&quot;</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">group_by</span>(state) <span class="op">%&gt;%</span><span class="st"> </span><span class="co">#group by the state</span>
-<span class="st">  </span><span class="kw">tally</span>() <span class="co"># just count the number of observations in each of the grouped categories</span>
-<span class="kw">head</span>(fatal_gunshot)</code></pre></div>
-<pre><code>## # A tibble: 6 x 2
-##   state          n
-##   &lt;chr&gt;      &lt;int&gt;
-## 1 ALABAMA       37
-## 2 ALASKA        11
-## 3 ARIZONA       76
-## 4 ARKANSAS      20
-## 5 CALIFORNIA   274
-## 6 COLORADO      56</code></pre>
 </div>
 <div id="data-analysis" class="section level1">
 <h1>Data analysis</h1>
