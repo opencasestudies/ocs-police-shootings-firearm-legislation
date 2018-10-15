@@ -15,19 +15,24 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Alexandra Stephens
 
 # Motivation
-Here we will recreate a study completed by the American Journal of Public Health "to examine whether stricter firearm legislation is associated with rates of fatal police shootings." (https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770)
-The bulk of the case study will be collecting, cleaning, manipulating and merging data in order to control for potential covariates. Then we will perform a poisson regression as well as statistical significance tests.
+We will recreate a study by the American Journal of Public Health "to examine whether stricter firearm legislation is associated with rates of fatal police shootings" (https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770).
+
+The bulk of this code will consist of collecting, cleaning and manipulating data in order to control for potential covariates. We will also run a poisson regression and tests of statistical significance.
+
+The packages used in this study are dplyr, rvest, ggplot2, zoo, openintro, readxl, data.table, and sandwich. If you are running this code please insure you have these packages installed.
+
+The learning objectives include data cleaning and manipulation, problem solving, scraping data from the web, cleaning text, merging data frames, poisson regression and significance testing.
 
 # What is the data?
-This study uses data from several different sources.
+This study uses data from many different sources.
 
-1. The Brady Campain State Scorecard from 2015. This provides numerical scores for each state across different types of firearm legislation. Obtained at http://crimadvisor.com/data/Brady-State-Scorecard-2015.pdf.
-2. The Counted: People killed by police in the US. Because "the US government has no comprehensive record of the number of people killed by law enforcement," The Counted project started and is known as a more accurate source for this data. https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted.
-3. Population characteristics by state obtained from the US Census https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html.
-4. Violent crime data in 2015 by state.Obtained from the FBI's Uniform crime report https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5.
+1. The Brady Campaign State Scorecard 2015: numerical scores for firearm legislation in each state. Obtained at http://crimadvisor.com/data/Brady-State-Scorecard-2015.pdf.
+2. The Counted: Persons killed by police in the US. The Counted project started because "the US government has no comprehensive record of the number of people killed by law enforcement." Visit https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted.
+3. US Census: Population characteristics by state. https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html.
+4. FBI's Uniform Crime Report: https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5.
 5. Unemployment rate data: https://www.bls.gov/lau/lastrk15.htm
-6. To calculate population density in 2015, we must import land area data from the US census (2010 land area data). https://www.census.gov/support/USACdataDownloads.html#LND
-7. Need education data
+6. US Census 2010 Land Area: https://www.census.gov/support/USACdataDownloads.html#LND
+7. We need education data for 2015. (Continue analysis without this for now).
 
 # Data import
 We import the Census population characteristics data, Brady Campaign Scorecard (2015), The Counted data for the years of 2015 and 2016, the FBI's crime report for 2015, and land area by state from the Census. These files were downloaded from their respective websites listed in the above section "What is the data?"
@@ -49,7 +54,7 @@ head(land[, 1:5])
 
 # Data wrangling
 ## 1. Census Data
-### Percent Male
+### Percent Male, White, Black, Hispanic
 
 The following is taken from the document sc-est2017-alldata6.pdf:
 
@@ -68,73 +73,67 @@ The following is taken from the document sc-est2017-alldata6.pdf:
     + 2 = Black or African American Alone
     + 3 = American Indian and Alaska Native Alone
     + 4 = Asian Alone
-    + 5 = Native Hawaiian and Other Pacific Islander Alone 6 = Two or more races
+    + 5 = Native Hawaiian and Other Pacific Islander Alone
+    + 6 = Two or more races
 
-So we need to group the data in several different ways and calculate the necessary statistics.
-Let's start with "percentage of the study population that was male." For each state, we need to add every row of data that is "male" (SEX = 1) in the column POPESTIMATE2015 since we are looking at the year 2015.
-We set the ORIGIN equal to 0 so that we do not add duplicate data, since 0 is the key for both Hispanic and non Hispanic residents.
-We group by each state since we want the percentage of male resendents in each state.
-We set the column "percentMale" to be the total male population divided by the total population in each state and then multiplied by 100 to get a percentage.
+Here we use the dplyr package to filter, group, and summarize the data in order to calculate the necessary statistics.
+For each state, we add rows in the column POPESTIMATE2015 since we are looking at the year 2015.
+Setting the ORIGIN or SEX equal to 0 ensures we don't add duplicate data, since 0 is the key for both Hispanic and non Hispanic residents and total male and female residents.
+We group by each state since all data in this study is at the state level.
 ```{r}
 library(dplyr)
-maleStats <- census %>%
+census_stats <- census %>%
+  filter(ORIGIN == 0, SEX == 0) %>%
+  group_by(NAME) %>%
+  summarize(white = sum(POPESTIMATE2015[RACE==1])/sum(POPESTIMATE2015)*100,
+            black = sum(POPESTIMATE2015[RACE==2])/sum(POPESTIMATE2015)*100)
+
+census_stats$hispanic <- census %>%
+  filter(SEX == 0) %>% 
+  group_by(NAME) %>%
+  summarize(x = sum(POPESTIMATE2015[ORIGIN==2])/sum(POPESTIMATE2015[ORIGIN==0])*100) %>%
+  pull(x)
+
+census_stats$male <- census %>%
   filter(ORIGIN == 0) %>%
   group_by(NAME) %>%
-  summarize(percentMale = sum(POPESTIMATE2015[SEX==1])/sum(POPESTIMATE2015[SEX==0])*100)
-head(maleStats)
+  summarize(x = sum(POPESTIMATE2015[SEX==1])/sum(POPESTIMATE2015[SEX==0])*100) %>%
+  pull(x)
+
+head(census_stats)
 ```
 ### Median Age
 First we need to get the total counts for each age (per state), since that's divided up into all the other categories.
 Set origin and sex to "Total" so we don't have repeats in the data.
 Group by state and age since these are the two factors we need to keep seperated.
-The column sumAges is the total residents in each specified state at each age year.
+The column sum_ages is the total residents in each specified state at each age year.
 ```{r}
-library(dplyr)
-library(tidyr)
-ageStats <- census %>%
+age_stats <- census %>%
   filter(ORIGIN == 0,SEX == 0) %>%
   group_by(NAME,AGE) %>%
-  summarize(sumAges = sum(POPESTIMATE2015))
-head(ageStats)
+  summarize(sum_ages = sum(POPESTIMATE2015))
+head(age_stats)
 ```
 We begin to see that finding the median is tricky, since we don't have a nice list of ages (i.e., [22,55,4,27,...,35]) for each state, in which case we could simply use a built in R "median" function. Instead we have the number of people that are ages 0-85+ in each state. For example, the first row of data above says that in Alabama (in 2015), there are 59080 residents that are 0 years old.
 
 First let us transform the matrix to have each state as a column name with the sumAges data underneath. I.e., right now we have a 51*86 by 3 dataframe, and instaed we want a 51 by 86 dataframe. I removed the age column since we can use the index instead (index minus 1, since R dataframes are indexed from 1 and the ages start at 0).
 ```{r}
 library(data.table)
-ageStats <- dcast(setDT(ageStats), AGE ~ NAME, value.var="sumAges")
-ageStats$AGE <- NULL
-head(ageStats[,0:5])
+age_stats <- dcast(setDT(age_stats), AGE ~ NAME, value.var="sum_ages")
+age_stats$AGE <- NULL
+head(age_stats[,0:5])
 ```
 Now that we've made the data easier to work with, we need to find a way to get the median. One method is to take the cumulative sum of each column and then divide all the rows by the last row in each repective column, calculating a percentile/quantile for each age. Then, we need to find the age in each state where the population exceeds the 50th percentile (the median!) for the first time.
 ```{r}
-ageStats <- as.data.frame(apply(ageStats, 2, cumsum))
-ageStats <- as.data.frame(apply(ageStats,2,function(x) x/x[86]))
-head(ageStats[, 1:6])
-median <- as.data.frame(apply(ageStats,2,function(x) which.max(x >= 0.5)-1))
-head(median)
-```
-### Percent White, Black, and Hispanic
-This is a simple calculation similar to caculating the percentage of male residents above.
-```{r}
-# library(dplyr)
-race_origin_stats <- census %>%
-  filter(ORIGIN == 0, SEX == 0) %>%
-  group_by(NAME) %>%
-  summarize(percentWhite = sum(POPESTIMATE2015[RACE==1])/sum(POPESTIMATE2015)*100,
-            percentBlack = sum(POPESTIMATE2015[RACE==2])/sum(POPESTIMATE2015)*100) 
-
-race_origin_stats$percentHispanic <- census %>%
-  filter(SEX == 0) %>% 
-  group_by(NAME) %>%
-  summarize(x = sum(POPESTIMATE2015[ORIGIN==2])/sum(POPESTIMATE2015[ORIGIN==0])*100) %>%
-  pull(x)
-
-head(race_origin_stats)
+age_stats <- as.data.frame(apply(age_stats, 2, cumsum))
+age_stats <- as.data.frame(apply(age_stats,2,function(x) x/x[86]))
+head(age_stats[, 1:6])
+census_stats$age <- apply(age_stats,2,function(x) which.max(x >= 0.5)-1)
+head(census_stats)
 ```
 ## 2. Violent Crime
 First print the names of the columns to see that there are some extraneous characters not visible in the dataframe. Use the column index to select columns instead of the complicated names.
-Also, print a section violent crime to observe the X__1 group we are looking for -- "Rate per 100,000 inhabitants" (per the study.)
+Also, we print a specified row of violent crime to observe the X__1 group we are looking for -- "Rate per 100,000 inhabitants" (per the study.)
 ```{r}
 #library(dplyr)
 colnames(crime)
@@ -154,10 +153,10 @@ names(violentcrime) <- c("State", "violent_crime")
 head(violentcrime)
 
 ```
-Looking at our whole dataframe we can see some of the state names have numbers in them (an example is printed below). This will make it hard to later merge this data together, so we should clean this up.
+Looking at our whole dataframe we can see some of the state names have numbers in them (an example is printed below). This will make it hard to later merge this data together, so we should clean this up. We also make the state names all lowercase for ease of merging.
 ```{r}
 violentcrime$State[20]
-violentcrime$State<-gsub('[0-9]+', '', violentcrime$State)
+violentcrime$State<-tolower(gsub('[0-9]+', '', violentcrime$State))
 violentcrime$State[20]
 ```
 
@@ -166,22 +165,32 @@ The study by AJPH groups the scores by the 7 categories. It is also important to
 
 For the purpose of practice and simplification (for now), let's just keep the first line of "total state points" from the Brady Scorecard.
 
-We need to transform the data frame so that we have a column of state names, and the total scores in another column.
+We need to transform the data frame so that we have a column of state names and a column of the corresponding total scores.
+
+The scores are characters from the data import, so we change them to numeric.
 ```{r}
 head(brady)
 colnames(brady)[1] <- "Law"
 brady <- brady %>%
   filter(Law == "TOTAL STATE POINTS")
+head(brady)
+```
+```{r}
 brady <- brady[,(ncol(brady) - 49):ncol(brady)]
+```
+
+```{r}
 brady_totals <- as_data_frame(colnames(brady))
-brady_totals$brady_totals <- t(brady)
+brady_totals$brady_scores <- t(brady)
 colnames(brady_totals)[1] <- "state"
+brady_totals$brady_scores <- as.numeric(brady_totals$brady_scores)
 head(brady_totals)
 ```
-In addition, this data frame's list of states is in two-letter state abbreviations. Since this is not cohesive with the previous datasets, we should change it to make merging dataframes easier later on. We use the openintro library to do the simple conversion (found by Googling!)
+
+In addition, this data frame's list of states is in two-letter state abbreviations. Since this is not cohesive with the previous datasets, we should change it to make merging dataframes easier later on. We use the openintro library to do the simple conversion.
 ```{r}
 library(openintro)
-brady_totals$state <-toupper(abbr2state(brady_totals$state))
+brady_totals$state <-tolower(abbr2state(brady_totals$state))
 head(brady_totals)
 ```
 
@@ -194,15 +203,24 @@ head(counted1516)
 Again, this data frame's list of states is in two-letter state abbreviations so let's change that.
 ```{r}
 #library(openintro)
-counted1516$state <-toupper(abbr2state(counted1516$state))
+counted1516$state <-tolower(abbr2state(counted1516$state))
 ```
 In the study, researchers "calculated descriptive statistics for the proportion of victims that were male, armed, and non-White." Thus we repeat here easily with dplyr. "Tally" is used to count the number of observations in each group.
 ```{r}
-fatal_gunshot <- counted1516 %>%
-  filter(classification == "Gunshot",raceethnicity != "white", armed != "No", gender == "Male") %>%
+counted_stats <- counted1516 %>%
   group_by(state) %>%
+  filter(classification == "Gunshot") %>%
   tally()
-head(fatal_gunshot)
+
+counted_stats$gunshot_filtered <- counted1516 %>%
+  group_by(state) %>%
+  filter(classification == "Gunshot",raceethnicity != "white", armed != "No", gender == "Male") %>%
+  tally() %>%
+  pull(n)
+
+colnames(counted_stats)[2] <- "gunshot_tally"
+head(counted_stats)
+
 ```
 ## 5. Unemployment Data
 This data is available online from the BLS, but there is no easy download of the table. It is also difficult to simply copy and paste; it doesn't hold it's table format. Thus, let's set up a web scraper to get the data.
@@ -225,13 +243,15 @@ state <- url%>%
 unemployment<-as.data.frame(state[c(2:52)]) 
 rate_select <- seq(3,103,by=2)
 rank_select <- seq(4,104,by=2)
-unemployment$rate <- datavalues[rate_select]
-unemployment$rank <- datavalues[rank_select]
+unemployment$unemployment_rate <- datavalues[rate_select]
+unemployment$unemployment_rank <- datavalues[rank_select]
 colnames(unemployment)[1] <- "state"
+
+unemployment <- arrange(unemployment, state)
 head(unemployment)
 ```
 ## 6. Population Density 2015
-To manually find population density, we can calculate total 2015 population from the Census data and import land area to calculate population density. This is caculated because good data for state population in 2015 was not readily available.
+To manually find population density, we can calculate total 2015 population from the Census data and import land area to calculate population density. This is caculated because "good"" data for state population in 2015 was not available in a downloadable format and/or was not easy to scrape.
 
 I select LND110210D because I looked at the data table at https://www.census.gov/geo/reference/state-area.html and compared values to find the correct column. This one corresponds to land area in square miles.
 ```{r}
@@ -246,27 +266,50 @@ landSqMi <- land %>%
 
 head(landSqMi)
 ```
-Since *landSqMi* gives us area for each town, we need to do an inner merge on the state names so that we just get the area for each state.
+Since *landSqMi* gives us area for each town, merge on the state names to obtain only the area for each state.
 
-I like to merge on columns with the same name so I rename the columns of *landSqMi* to match totalPop.
-
-Then, convert the state names to be all uppercase, since this has been the format of the majority of these datasets, and we need the row values to be exactly equivalent to merge successfully.
+Convert the state names to be all lowercase since the row values must match to merge successfully.
 ```{r}
-names(landSqMi) <- c("NAME", "LandAreaSqMiles")
+names(landSqMi) <- c("NAME", "land_area")
 
-landSqMi$NAME <- toupper(landSqMi$NAME)
-totalPop$NAME <- toupper(totalPop$NAME)
+landSqMi$NAME <- tolower(landSqMi$NAME)
+totalPop$NAME <- tolower(totalPop$NAME)
 
 popdensity <- merge(totalPop,landSqMi,by="NAME")
-popdensity$density <- popdensity$total/popdensity$LandAreaSqMiles
+popdensity$density <- popdensity$total/popdensity$land_area
+
+popdensity$total <- NULL
+popdensity$land_area <-NULL
+
 head(popdensity)
 ```
+# Data analysis
+## Poisson regression
+### 1. No adjustment
+From the study: "First, we tested the influence of firearm legislative strength on fatal police shootings without adjustment..."
+Thus we only need the Brady scores, *brady_totals* and the Counted data, *counted_stats*.
+```{r}
+require(ggplot2)
+require(sandwich)
+require(msm)
+df <- merge(brady_totals,counted_stats,by="state")
+head(df)
+summary(m1 <- glm(gunshot_tally ~  brady_scores, family="poisson", data = df))
+ggplot(df,aes(brady_scores)) + geom_point(aes(y = gunshot_tally, color = "data")) + geom_line(aes(y = m1$fitted.values, color = "fitted"))
+```
+Use standard robust errors for parameter estimates
+```{r}
+cov.m1 <- vcovHC(m1, type="HC0")
+std.err <- sqrt(diag(cov.m1))
+r.est <- cbind(Estimate= coef(m1), "Robust SE" = std.err,
+"Pr(>|z|)" = 2 * pnorm(abs(coef(m1)/std.err), lower.tail=FALSE),
+LL = coef(m1) - 1.96 * std.err,
+UL = coef(m1) + 1.96 * std.err)
 
-
-# Exploratory data analysis
-
-
-# Data analysis 
+r.est
+```
+### 2. Sociodemographic adjustment
+We now construct a multivariate model to account "for state-level sociodemographic characteristics."
 
 # Summary of results
 
