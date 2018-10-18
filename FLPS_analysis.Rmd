@@ -100,6 +100,12 @@ census_stats$male <- census %>%
   summarize(x = sum(POPESTIMATE2015[SEX==1])/sum(POPESTIMATE2015[SEX==0])*100) %>%
   pull(x)
 
+census_stats$total_pop <- census %>%
+  filter(ORIGIN == 0, SEX == 0 ) %>%
+  group_by(NAME) %>%
+  summarize(total = sum(POPESTIMATE2015)) %>%
+  pull(total)
+
 head(census_stats)
 ```
 ### Median Age
@@ -206,6 +212,8 @@ Again, this data frame's list of states is in two-letter state abbreviations so 
 counted1516$state <-tolower(abbr2state(counted1516$state))
 ```
 In the study, researchers "calculated descriptive statistics for the proportion of victims that were male, armed, and non-White." Thus we repeat here easily with dplyr. "Tally" is used to count the number of observations in each group.
+
+They also calculated the annualized rate per 1,000,000.
 ```{r}
 counted_stats <- counted1516 %>%
   group_by(state) %>%
@@ -219,6 +227,7 @@ counted_stats$gunshot_filtered <- counted1516 %>%
   pull(n)
 
 colnames(counted_stats)[2] <- "gunshot_tally"
+counted_stats$gunshot_rate <- (counted_stats$gunshot_tally/census_stats$total_pop)*1000000
 head(counted_stats)
 
 ```
@@ -286,18 +295,33 @@ head(popdensity)
 # Data analysis
 ## Poisson regression
 ### 1. No adjustment
-From the study: "First, we tested the influence of firearm legislative strength on fatal police shootings without adjustment..."
-Thus we only need the Brady scores, *brady_totals* and the Counted data, *counted_stats*.
+
+$\mu = (t)exp(\beta_{0})exp(\beta_{1}X)$
+
+$\mu/t = exp(\beta_{0})exp(\beta_{1}X)$
 ```{r}
 require(ggplot2)
 require(sandwich)
 require(msm)
-df <- merge(brady_totals,counted_stats,by="state")
-head(df)
-summary(m1 <- glm(gunshot_tally ~  brady_scores, family="poisson", data = df))
-ggplot(df,aes(brady_scores)) + geom_point(aes(y = gunshot_tally, color = "data")) + geom_line(aes(y = m1$fitted.values, color = "fitted"))
+
+census_stats$NAME <- tolower(census_stats$NAME)
+p_df <- merge(brady_totals,counted_stats,by="state")
+p_df <- merge(p_df,census_stats,by.x="state", by.y = "NAME")
+
+#summary(lm1 <- lm(gunshot_rate ~ brady_scores, data = p_df))
+#ggplot(p_df, aes(x = brady_scores)) + geom_point(aes(y = gunshot_rate, color = "data")) + geom_line(aes(y = lm1$fitted.values , color = "fitted")) + ggtitle("Fatal Police Shootings per 1,000,000 Simple Linear Regression")
+
+summary(m1 <- glm(gunshot_tally ~  brady_scores + offset(log(total_pop)), family="poisson", data = p_df))
+
+resultY <- exp(m1$coefficients[1])*exp(m1$coefficients[2]*p_df$brady_scores)*1000000/2
+dat <- as.data.frame(resultY)
+dat$X <- p_df$brady_scores
+dat$trueY <- p_df$gunshot_tally/p_df$total_pop*1000000/2
+
+ggplot(dat, aes(x = X)) + geom_point(aes(y = trueY, color = "data")) + geom_line(aes(y = resultY , color = "fitted")) + ggtitle("Fatal Police Shootings Poisson Regression") + ylab("Annualized Rate of Fatal Police Shootings per 1 000 000") + xlab("Firearm Legislative Strength Score")
 ```
-Use standard robust errors for parameter estimates
+
+Standard robust errors for parameter estimates
 ```{r}
 cov.m1 <- vcovHC(m1, type="HC0")
 std.err <- sqrt(diag(cov.m1))
@@ -305,11 +329,32 @@ r.est <- cbind(Estimate= coef(m1), "Robust SE" = std.err,
 "Pr(>|z|)" = 2 * pnorm(abs(coef(m1)/std.err), lower.tail=FALSE),
 LL = coef(m1) - 1.96 * std.err,
 UL = coef(m1) + 1.96 * std.err)
-
 r.est
 ```
 ### 2. Sociodemographic adjustment
 We now construct a multivariate model to account "for state-level sociodemographic characteristics."
+
+$\mu = (t)exp(\beta_{0})exp(\beta_{1}X_{1})...exp(\beta_{6}X_{6})$
+```{r}
+# mv for multivariate
+m2 <- glm(gunshot_tally ~  brady_scores + white + black + hispanic + male + age + offset(log(total_pop)), family="poisson", data = p_df)
+summary(m2)
+m2_Xvars <- p_df %>%
+  select(brady_scores,white,black,hispanic,male,age)
+m2_Xvars$coef <- 1
+m2_Xvars <- m2_Xvars[,c(7,1,2,3,4,5,6)]
+X<- t(t(m2_Xvars)*(m2$coefficients))
+# multiple e^col for each column in X
+
+test <- rowSums(X[,2:7])
+test <- exp(test)*X[,1]
+
+dat <- as.data.frame(test)
+dat$X <- p_df$brady_scores
+dat$trueY <- p_df$gunshot_tally
+
+#ggplot(dat, aes(x = X)) + geom_point(aes(y = trueY, color = "data")) + geom_line(aes(y = test , color = "fitted")) + ggtitle("Fatal Police Shootings Poisson Regression") + ylab("Rate Per 1M Residents") + xlab("Brady Scores")
+```
 
 # Summary of results
 
