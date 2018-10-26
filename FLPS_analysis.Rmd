@@ -16,39 +16,39 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 # Motivation
-We will recreate a study by the American Journal of Public Health "to examine whether stricter firearm legislation is associated with rates of fatal police shootings" (https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770).
+We will recreate a study by the American Journal of Public Health ["to examine whether stricter firearm legislation is associated with rates of fatal police shootings."](https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770)
 
 The bulk of this code will consist of collecting, cleaning and manipulating data in order to control for potential covariates. We will also run a poisson regression and tests of statistical significance.
 
-The packages used in this study are dplyr, rvest, ggplot2, zoo, openintro, readxl, data.table, and sandwich. If you are running this code please insure you have these packages installed.
+The packages used in this study are `dplyr`, `rvest`, `ggplot2`, `zoo`, `openintro`, `readxl`, `data.table`, and `sandwich`. If you are running this code please insure you have these packages installed.
 
 The learning objectives include data cleaning and manipulation, problem solving, scraping data from the web, cleaning text, merging data frames, poisson regression and significance testing.
 
 # What is the data?
 This study uses data from many different sources.
 
-1. The Brady Campaign State Scorecard 2015: numerical scores for firearm legislation in each state. Obtained at http://crimadvisor.com/data/Brady-State-Scorecard-2015.pdf.
-2. The Counted: Persons killed by police in the US. The Counted project started because "the US government has no comprehensive record of the number of people killed by law enforcement." Visit https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted.
-3. US Census: Population characteristics by state. https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html.
-4. FBI's Uniform Crime Report: https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5.
-5. Unemployment rate data: https://www.bls.gov/lau/lastrk15.htm
-6. US Census 2010 Land Area: https://www.census.gov/support/USACdataDownloads.html#LND
+1. [The Brady Campaign State Scorecard 2015](http://crimadvisor.com/data/Brady-State-Scorecard-2015.pdf): numerical scores for firearm legislation in each state.
+2. [The Counted](https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted): Persons killed by police in the US. The Counted project started because "the US government has no comprehensive record of the number of people killed by law enforcement."
+3. [US Census](https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html): Population characteristics by state.
+4. [FBI's Uniform Crime Report](https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5)
+5. [Unemployment rate data](https://www.bls.gov/lau/lastrk15.htm)
+6. [US Census 2010 Land Area](https://www.census.gov/support/USACdataDownloads.html#LND)
 7. We need education data for 2015. (Continue analysis without this for now).
 
 # Data import
 We import the Census population characteristics data, Brady Campaign Scorecard (2015), The Counted data for the years of 2015 and 2016, the FBI's crime report for 2015, and land area by state from the Census. These files were downloaded from their respective websites listed in the above section "What is the data?"
 ```{r}
 library(readxl)
-census <- read.csv("sc-est2017-alldata6.csv",nrows = 236900,stringsAsFactors = FALSE)
+census <- read.csv("data/sc-est2017-alldata6.csv",nrows = 236900,stringsAsFactors = FALSE)
 head(census[, 1:5])
-brady <- read_excel("Brady-State-Scorecard-2015.xlsx", sheet = 1)
+brady <- read_excel("data/Brady-State-Scorecard-2015.xlsx", sheet = 1)
 head(brady[, 1:5])
-counted15 <- read.csv("the-counted-2015.csv",stringsAsFactors = FALSE)
-counted16 <- read.csv("the-counted-2016.csv",stringsAsFactors = FALSE)
+counted15 <- read.csv("data/the-counted-2015.csv",stringsAsFactors = FALSE)
+counted16 <- read.csv("data/the-counted-2016.csv",stringsAsFactors = FALSE)
 head(counted15)
-crime <- read_excel("table_5_crime_in_the_united_states_by_state_2015.xls", sheet = 1,skip = 3)
+crime <- read_excel("data/table_5_crime_in_the_united_states_by_state_2015.xls", sheet = 1,skip = 3)
 head(crime[, 1:5])
-land <- read_excel("LND01.xls", sheet = 1)
+land <- read_excel("data/LND01.xls", sheet = 1)
 head(land[, 1:5])
 ```
 
@@ -77,9 +77,9 @@ The following is taken from the document sc-est2017-alldata6.pdf:
     + 5 = Native Hawaiian and Other Pacific Islander Alone
     + 6 = Two or more races
 
-Here we use the dplyr package to filter, group, and summarize the data in order to calculate the necessary statistics.
-For each state, we add rows in the column POPESTIMATE2015 since we are looking at the year 2015.
-Setting the ORIGIN or SEX equal to 0 ensures we don't add duplicate data, since 0 is the key for both Hispanic and non Hispanic residents and total male and female residents.
+Here we use the `dplyr` package to `filter`, `group_by`, and `summarize` the data in order to calculate the necessary statistics.
+For each state, we add rows in the column `POPESTIMATE2015` since we are looking at the year 2015.
+Setting the `ORIGIN` or `SEX` equal to 0 ensures we don't add duplicate data, since 0 is the key for both Hispanic and non Hispanic residents and total male and female residents.
 We group by each state since all data in this study is at the state level.
 ```{r}
 library(dplyr)
@@ -111,7 +111,7 @@ head(census_stats)
 ```
 ### Median Age
 First we need to get the total counts for each age (per state), since that's divided up into all the other categories.
-Set origin and sex to "Total" so we don't have repeats in the data.
+Set `ORIGIN` and `SEX` to "Total" so we don't have repeats in the data.
 Group by state and age since these are the two factors we need to keep seperated.
 The column sum_ages is the total residents in each specified state at each age year.
 ```{r}
@@ -140,16 +140,16 @@ head(census_stats)
 ```
 ## 2. Violent Crime
 First print the names of the columns to see that there are some extraneous characters not visible in the dataframe. Use the column index to select columns instead of the complicated names.
-Also, we print a specified row of violent crime to observe the X__1 group we are looking for -- "Rate per 100,000 inhabitants" (per the study.)
+Also, we print a specified row of violent crime to observe the `X__1` group we are looking for -- `Rate per 100,000 inhabitants` (per the study.)
 ```{r}
 #library(dplyr)
 colnames(crime)
 violentcrime<- crime[ , c(1,3,5)]
 violentcrime[11, ]
 ```
-We need get all rows where X__1 = Rate per 100,000 inhabitants. However, as we can see above, the value for "State" in these rows is NA. We need to fill that value with the state name that is listed in a previous row.
-Then we can select the rows where X__1 = Rate per 100,000 inhabitants.
-After that, we no longer need the column X__1, so we can remove it.
+We need get all rows where `X__1 == Rate per 100,000 inhabitants`. However, as we can see above, the value for `State` in these rows is `<NA>`. We need to fill that value with the state name that is listed in a previous row.
+Then we can select the rows where `X__1 == Rate per 100,000 inhabitants`.
+After that, we no longer need the column `X__1`, so we can remove it.
 ```{r}
 library(zoo)
 violentcrime$State <- na.locf(violentcrime$State)
@@ -194,7 +194,7 @@ brady_totals$brady_scores <- as.numeric(brady_totals$brady_scores)
 head(brady_totals)
 ```
 
-In addition, this data frame's list of states is in two-letter state abbreviations. Since this is not cohesive with the previous datasets, we should change it to make merging dataframes easier later on. We use the openintro library to do the simple conversion.
+In addition, this data frame's list of states is in two-letter state abbreviations. Since this is not cohesive with the previous datasets, we should change it to make merging dataframes easier later on. We use the `openintro` library to do the simple conversion.
 ```{r}
 library(openintro)
 brady_totals$state <-tolower(abbr2state(brady_totals$state))
@@ -212,7 +212,7 @@ Again, this data frame's list of states is in two-letter state abbreviations so 
 #library(openintro)
 counted1516$state <-tolower(abbr2state(counted1516$state))
 ```
-In the study, researchers "calculated descriptive statistics for the proportion of victims that were male, armed, and non-White." Thus we repeat here easily with dplyr. "Tally" is used to count the number of observations in each group.
+In the study, researchers "calculated descriptive statistics for the proportion of victims that were male, armed, and non-White." Thus we repeat here easily with `dplyr`. `tally` is used to count the number of observations in each group.
 
 They also calculated the annualized rate per 1,000,000.
 ```{r}
@@ -235,9 +235,9 @@ head(counted_stats)
 ## 5. Unemployment Data
 This data is available online from the BLS, but there is no easy download of the table. It is also difficult to simply copy and paste; it doesn't hold it's table format. Thus, let's set up a web scraper to get the data.
 
-To do this, we must use the *rvest* package. To view the HTML of a webpage, right-click and select "View page source."
+To do this, we must use the `rvest` package. To view the HTML of a webpage, right-click and select "View page source."
 
-Then we need to get the values from each column of the data table. *html_nodes* acts as a CSS selector. The sub0 class returns the state names, and the datavalue class corresponds to the values of both columns, Unemployment Rank and Rate. Since there is no differentiation of the two columns, and our "datavalues" alternate, we select subsets of this column to be the two seperate columns "rank" and "rate."
+Then we need to get the values from each column of the data table. `html_nodes` acts as a CSS selector. The sub0 class returns the state names, and the datavalue class corresponds to the values of both columns, Unemployment Rank and Rate. Since there is no differentiation of the two columns, and our "datavalues" alternate, we select subsets of this column to be the two seperate columns "rank" and "rate."
 ```{r}
 library(rvest)
 url <- read_html("https://www.bls.gov/lau/lastrk15.htm")
@@ -263,7 +263,7 @@ head(unemployment)
 ## 6. Population Density 2015
 To manually find population density, we can calculate total 2015 population from the Census data and import land area to calculate population density. This is caculated because "good"" data for state population in 2015 was not available in a downloadable format and/or was not easy to scrape.
 
-I select LND110210D because I looked at the data table at https://www.census.gov/geo/reference/state-area.html and compared values to find the correct column. This one corresponds to land area in square miles.
+I select `LND110210D` because I looked at the data table at https://www.census.gov/geo/reference/state-area.html and compared values to find the correct column. This one corresponds to land area in square miles.
 ```{r}
 library(dplyr)
 totalPop <- census %>%
@@ -276,7 +276,7 @@ landSqMi <- land %>%
 
 head(landSqMi)
 ```
-Since *landSqMi* gives us area for each town, merge on the state names to obtain only the area for each state.
+Since `landSqMi` gives us area for each town, merge on the state names to obtain only the area for each state.
 
 Convert the state names to be all lowercase since the row values must match to merge successfully.
 ```{r}
