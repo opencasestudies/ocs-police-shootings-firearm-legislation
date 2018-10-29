@@ -33,7 +33,8 @@ This study uses data from many different sources.
 4. [FBI's Uniform Crime Report](https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5)
 5. [Unemployment rate data](https://www.bls.gov/lau/lastrk15.htm)
 6. [US Census 2010 Land Area](https://www.census.gov/support/USACdataDownloads.html#LND)
-7. We need education data for 2015. (Continue analysis without this for now).
+7. Education data for 2010 via the [US Census education table editor](https://factfinder.census.gov/faces/tableservices/jsf/pages/productview.xhtml?src=bkmk).
+8. "Household firearm owndership rates, represented as the percentage of firearm suicides to all suicides." Downloaded from the [CDC's Web-Based Injury Statistics Query and Reporting System](https://www.cdc.gov/injury/wisqars/fatal.html).
 
 # Data import
 We import the Census population characteristics data, Brady Campaign Scorecard (2015), The Counted data for the years of 2015 and 2016, the FBI's crime report for 2015, and land area by state from the Census. These files were downloaded from their respective websites listed in the above section "What is the data?"

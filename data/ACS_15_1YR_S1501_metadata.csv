@@ -1,0 +1,327 @@
+GEO.id,Id
+GEO.id2,Id2
+GEO.display-label,Geography
+HC01_EST_VC02,Total; Estimate; Population 18 to 24 years
+HC01_MOE_VC02,Total; Margin of Error; Population 18 to 24 years
+HC02_EST_VC02,Percent; Estimate; Population 18 to 24 years
+HC02_MOE_VC02,Percent; Margin of Error; Population 18 to 24 years
+HC03_EST_VC02,Males; Estimate; Population 18 to 24 years
+HC03_MOE_VC02,Males; Margin of Error; Population 18 to 24 years
+HC04_EST_VC02,Percent Males; Estimate; Population 18 to 24 years
+HC04_MOE_VC02,Percent Males; Margin of Error; Population 18 to 24 years
+HC05_EST_VC02,Females; Estimate; Population 18 to 24 years
+HC05_MOE_VC02,Females; Margin of Error; Population 18 to 24 years
+HC06_EST_VC02,Percent Females; Estimate; Population 18 to 24 years
+HC06_MOE_VC02,Percent Females; Margin of Error; Population 18 to 24 years
+HC01_EST_VC03,Total; Estimate; Population 18 to 24 years - Less than high school graduate
+HC01_MOE_VC03,Total; Margin of Error; Population 18 to 24 years - Less than high school graduate
+HC02_EST_VC03,Percent; Estimate; Population 18 to 24 years - Less than high school graduate
+HC02_MOE_VC03,Percent; Margin of Error; Population 18 to 24 years - Less than high school graduate
+HC03_EST_VC03,Males; Estimate; Population 18 to 24 years - Less than high school graduate
+HC03_MOE_VC03,Males; Margin of Error; Population 18 to 24 years - Less than high school graduate
+HC04_EST_VC03,Percent Males; Estimate; Population 18 to 24 years - Less than high school graduate
+HC04_MOE_VC03,Percent Males; Margin of Error; Population 18 to 24 years - Less than high school graduate
+HC05_EST_VC03,Females; Estimate; Population 18 to 24 years - Less than high school graduate
+HC05_MOE_VC03,Females; Margin of Error; Population 18 to 24 years - Less than high school graduate
+HC06_EST_VC03,Percent Females; Estimate; Population 18 to 24 years - Less than high school graduate
+HC06_MOE_VC03,Percent Females; Margin of Error; Population 18 to 24 years - Less than high school graduate
+HC01_EST_VC04,Total; Estimate; Population 18 to 24 years - High school graduate (includes equivalency)
+HC01_MOE_VC04,Total; Margin of Error; Population 18 to 24 years - High school graduate (includes equivalency)
+HC02_EST_VC04,Percent; Estimate; Population 18 to 24 years - High school graduate (includes equivalency)
+HC02_MOE_VC04,Percent; Margin of Error; Population 18 to 24 years - High school graduate (includes equivalency)
+HC03_EST_VC04,Males; Estimate; Population 18 to 24 years - High school graduate (includes equivalency)
+HC03_MOE_VC04,Males; Margin of Error; Population 18 to 24 years - High school graduate (includes equivalency)
+HC04_EST_VC04,Percent Males; Estimate; Population 18 to 24 years - High school graduate (includes equivalency)
+HC04_MOE_VC04,Percent Males; Margin of Error; Population 18 to 24 years - High school graduate (includes equivalency)
+HC05_EST_VC04,Females; Estimate; Population 18 to 24 years - High school graduate (includes equivalency)
+HC05_MOE_VC04,Females; Margin of Error; Population 18 to 24 years - High school graduate (includes equivalency)
+HC06_EST_VC04,Percent Females; Estimate; Population 18 to 24 years - High school graduate (includes equivalency)
+HC06_MOE_VC04,Percent Females; Margin of Error; Population 18 to 24 years - High school graduate (includes equivalency)
+HC01_EST_VC05,Total; Estimate; Population 18 to 24 years - Some college or associate's degree
+HC01_MOE_VC05,Total; Margin of Error; Population 18 to 24 years - Some college or associate's degree
+HC02_EST_VC05,Percent; Estimate; Population 18 to 24 years - Some college or associate's degree
+HC02_MOE_VC05,Percent; Margin of Error; Population 18 to 24 years - Some college or associate's degree
+HC03_EST_VC05,Males; Estimate; Population 18 to 24 years - Some college or associate's degree
+HC03_MOE_VC05,Males; Margin of Error; Population 18 to 24 years - Some college or associate's degree
+HC04_EST_VC05,Percent Males; Estimate; Population 18 to 24 years - Some college or associate's degree
+HC04_MOE_VC05,Percent Males; Margin of Error; Population 18 to 24 years - Some college or associate's degree
+HC05_EST_VC05,Females; Estimate; Population 18 to 24 years - Some college or associate's degree
+HC05_MOE_VC05,Females; Margin of Error; Population 18 to 24 years - Some college or associate's degree
+HC06_EST_VC05,Percent Females; Estimate; Population 18 to 24 years - Some college or associate's degree
+HC06_MOE_VC05,Percent Females; Margin of Error; Population 18 to 24 years - Some college or associate's degree
+HC01_EST_VC06,Total; Estimate; Population 18 to 24 years - Bachelor's degree or higher
+HC01_MOE_VC06,Total; Margin of Error; Population 18 to 24 years - Bachelor's degree or higher
+HC02_EST_VC06,Percent; Estimate; Population 18 to 24 years - Bachelor's degree or higher
+HC02_MOE_VC06,Percent; Margin of Error; Population 18 to 24 years - Bachelor's degree or higher
+HC03_EST_VC06,Males; Estimate; Population 18 to 24 years - Bachelor's degree or higher
+HC03_MOE_VC06,Males; Margin of Error; Population 18 to 24 years - Bachelor's degree or higher
+HC04_EST_VC06,Percent Males; Estimate; Population 18 to 24 years - Bachelor's degree or higher
+HC04_MOE_VC06,Percent Males; Margin of Error; Population 18 to 24 years - Bachelor's degree or higher
+HC05_EST_VC06,Females; Estimate; Population 18 to 24 years - Bachelor's degree or higher
+HC05_MOE_VC06,Females; Margin of Error; Population 18 to 24 years - Bachelor's degree or higher
+HC06_EST_VC06,Percent Females; Estimate; Population 18 to 24 years - Bachelor's degree or higher
+HC06_MOE_VC06,Percent Females; Margin of Error; Population 18 to 24 years - Bachelor's degree or higher
+HC01_EST_VC08,Total; Estimate; Population 25 years and over
+HC01_MOE_VC08,Total; Margin of Error; Population 25 years and over
+HC02_EST_VC08,Percent; Estimate; Population 25 years and over
+HC02_MOE_VC08,Percent; Margin of Error; Population 25 years and over
+HC03_EST_VC08,Males; Estimate; Population 25 years and over
+HC03_MOE_VC08,Males; Margin of Error; Population 25 years and over
+HC04_EST_VC08,Percent Males; Estimate; Population 25 years and over
+HC04_MOE_VC08,Percent Males; Margin of Error; Population 25 years and over
+HC05_EST_VC08,Females; Estimate; Population 25 years and over
+HC05_MOE_VC08,Females; Margin of Error; Population 25 years and over
+HC06_EST_VC08,Percent Females; Estimate; Population 25 years and over
+HC06_MOE_VC08,Percent Females; Margin of Error; Population 25 years and over
+HC01_EST_VC09,Total; Estimate; Population 25 years and over - Less than 9th grade
+HC01_MOE_VC09,Total; Margin of Error; Population 25 years and over - Less than 9th grade
+HC02_EST_VC09,Percent; Estimate; Population 25 years and over - Less than 9th grade
+HC02_MOE_VC09,Percent; Margin of Error; Population 25 years and over - Less than 9th grade
+HC03_EST_VC09,Males; Estimate; Population 25 years and over - Less than 9th grade
+HC03_MOE_VC09,Males; Margin of Error; Population 25 years and over - Less than 9th grade
+HC04_EST_VC09,Percent Males; Estimate; Population 25 years and over - Less than 9th grade
+HC04_MOE_VC09,Percent Males; Margin of Error; Population 25 years and over - Less than 9th grade
+HC05_EST_VC09,Females; Estimate; Population 25 years and over - Less than 9th grade
+HC05_MOE_VC09,Females; Margin of Error; Population 25 years and over - Less than 9th grade
+HC06_EST_VC09,Percent Females; Estimate; Population 25 years and over - Less than 9th grade
+HC06_MOE_VC09,Percent Females; Margin of Error; Population 25 years and over - Less than 9th grade
+HC01_EST_VC10,"Total; Estimate; Population 25 years and over - 9th to 12th grade, no diploma"
+HC01_MOE_VC10,"Total; Margin of Error; Population 25 years and over - 9th to 12th grade, no diploma"
+HC02_EST_VC10,"Percent; Estimate; Population 25 years and over - 9th to 12th grade, no diploma"
+HC02_MOE_VC10,"Percent; Margin of Error; Population 25 years and over - 9th to 12th grade, no diploma"
+HC03_EST_VC10,"Males; Estimate; Population 25 years and over - 9th to 12th grade, no diploma"
+HC03_MOE_VC10,"Males; Margin of Error; Population 25 years and over - 9th to 12th grade, no diploma"
+HC04_EST_VC10,"Percent Males; Estimate; Population 25 years and over - 9th to 12th grade, no diploma"
+HC04_MOE_VC10,"Percent Males; Margin of Error; Population 25 years and over - 9th to 12th grade, no diploma"
+HC05_EST_VC10,"Females; Estimate; Population 25 years and over - 9th to 12th grade, no diploma"
+HC05_MOE_VC10,"Females; Margin of Error; Population 25 years and over - 9th to 12th grade, no diploma"
+HC06_EST_VC10,"Percent Females; Estimate; Population 25 years and over - 9th to 12th grade, no diploma"
+HC06_MOE_VC10,"Percent Females; Margin of Error; Population 25 years and over - 9th to 12th grade, no diploma"
+HC01_EST_VC11,Total; Estimate; Population 25 years and over - High school graduate (includes equivalency)
+HC01_MOE_VC11,Total; Margin of Error; Population 25 years and over - High school graduate (includes equivalency)
+HC02_EST_VC11,Percent; Estimate; Population 25 years and over - High school graduate (includes equivalency)
+HC02_MOE_VC11,Percent; Margin of Error; Population 25 years and over - High school graduate (includes equivalency)
+HC03_EST_VC11,Males; Estimate; Population 25 years and over - High school graduate (includes equivalency)
+HC03_MOE_VC11,Males; Margin of Error; Population 25 years and over - High school graduate (includes equivalency)
+HC04_EST_VC11,Percent Males; Estimate; Population 25 years and over - High school graduate (includes equivalency)
+HC04_MOE_VC11,Percent Males; Margin of Error; Population 25 years and over - High school graduate (includes equivalency)
+HC05_EST_VC11,Females; Estimate; Population 25 years and over - High school graduate (includes equivalency)
+HC05_MOE_VC11,Females; Margin of Error; Population 25 years and over - High school graduate (includes equivalency)
+HC06_EST_VC11,Percent Females; Estimate; Population 25 years and over - High school graduate (includes equivalency)
+HC06_MOE_VC11,Percent Females; Margin of Error; Population 25 years and over - High school graduate (includes equivalency)
+HC01_EST_VC12,"Total; Estimate; Population 25 years and over - Some college, no degree"
+HC01_MOE_VC12,"Total; Margin of Error; Population 25 years and over - Some college, no degree"
+HC02_EST_VC12,"Percent; Estimate; Population 25 years and over - Some college, no degree"
+HC02_MOE_VC12,"Percent; Margin of Error; Population 25 years and over - Some college, no degree"
+HC03_EST_VC12,"Males; Estimate; Population 25 years and over - Some college, no degree"
+HC03_MOE_VC12,"Males; Margin of Error; Population 25 years and over - Some college, no degree"
+HC04_EST_VC12,"Percent Males; Estimate; Population 25 years and over - Some college, no degree"
+HC04_MOE_VC12,"Percent Males; Margin of Error; Population 25 years and over - Some college, no degree"
+HC05_EST_VC12,"Females; Estimate; Population 25 years and over - Some college, no degree"
+HC05_MOE_VC12,"Females; Margin of Error; Population 25 years and over - Some college, no degree"
+HC06_EST_VC12,"Percent Females; Estimate; Population 25 years and over - Some college, no degree"
+HC06_MOE_VC12,"Percent Females; Margin of Error; Population 25 years and over - Some college, no degree"
+HC01_EST_VC13,Total; Estimate; Population 25 years and over - Associate's degree
+HC01_MOE_VC13,Total; Margin of Error; Population 25 years and over - Associate's degree
+HC02_EST_VC13,Percent; Estimate; Population 25 years and over - Associate's degree
+HC02_MOE_VC13,Percent; Margin of Error; Population 25 years and over - Associate's degree
+HC03_EST_VC13,Males; Estimate; Population 25 years and over - Associate's degree
+HC03_MOE_VC13,Males; Margin of Error; Population 25 years and over - Associate's degree
+HC04_EST_VC13,Percent Males; Estimate; Population 25 years and over - Associate's degree
+HC04_MOE_VC13,Percent Males; Margin of Error; Population 25 years and over - Associate's degree
+HC05_EST_VC13,Females; Estimate; Population 25 years and over - Associate's degree
+HC05_MOE_VC13,Females; Margin of Error; Population 25 years and over - Associate's degree
+HC06_EST_VC13,Percent Females; Estimate; Population 25 years and over - Associate's degree
+HC06_MOE_VC13,Percent Females; Margin of Error; Population 25 years and over - Associate's degree
+HC01_EST_VC14,Total; Estimate; Population 25 years and over - Bachelor's degree
+HC01_MOE_VC14,Total; Margin of Error; Population 25 years and over - Bachelor's degree
+HC02_EST_VC14,Percent; Estimate; Population 25 years and over - Bachelor's degree
+HC02_MOE_VC14,Percent; Margin of Error; Population 25 years and over - Bachelor's degree
+HC03_EST_VC14,Males; Estimate; Population 25 years and over - Bachelor's degree
+HC03_MOE_VC14,Males; Margin of Error; Population 25 years and over - Bachelor's degree
+HC04_EST_VC14,Percent Males; Estimate; Population 25 years and over - Bachelor's degree
+HC04_MOE_VC14,Percent Males; Margin of Error; Population 25 years and over - Bachelor's degree
+HC05_EST_VC14,Females; Estimate; Population 25 years and over - Bachelor's degree
+HC05_MOE_VC14,Females; Margin of Error; Population 25 years and over - Bachelor's degree
+HC06_EST_VC14,Percent Females; Estimate; Population 25 years and over - Bachelor's degree
+HC06_MOE_VC14,Percent Females; Margin of Error; Population 25 years and over - Bachelor's degree
+HC01_EST_VC15,Total; Estimate; Population 25 years and over - Graduate or professional degree
+HC01_MOE_VC15,Total; Margin of Error; Population 25 years and over - Graduate or professional degree
+HC02_EST_VC15,Percent; Estimate; Population 25 years and over - Graduate or professional degree
+HC02_MOE_VC15,Percent; Margin of Error; Population 25 years and over - Graduate or professional degree
+HC03_EST_VC15,Males; Estimate; Population 25 years and over - Graduate or professional degree
+HC03_MOE_VC15,Males; Margin of Error; Population 25 years and over - Graduate or professional degree
+HC04_EST_VC15,Percent Males; Estimate; Population 25 years and over - Graduate or professional degree
+HC04_MOE_VC15,Percent Males; Margin of Error; Population 25 years and over - Graduate or professional degree
+HC05_EST_VC15,Females; Estimate; Population 25 years and over - Graduate or professional degree
+HC05_MOE_VC15,Females; Margin of Error; Population 25 years and over - Graduate or professional degree
+HC06_EST_VC15,Percent Females; Estimate; Population 25 years and over - Graduate or professional degree
+HC06_MOE_VC15,Percent Females; Margin of Error; Population 25 years and over - Graduate or professional degree
+HC01_EST_VC17,Total; Estimate; Percent high school graduate or higher
+HC01_MOE_VC17,Total; Margin of Error; Percent high school graduate or higher
+HC02_EST_VC17,Percent; Estimate; Percent high school graduate or higher
+HC02_MOE_VC17,Percent; Margin of Error; Percent high school graduate or higher
+HC03_EST_VC17,Males; Estimate; Percent high school graduate or higher
+HC03_MOE_VC17,Males; Margin of Error; Percent high school graduate or higher
+HC04_EST_VC17,Percent Males; Estimate; Percent high school graduate or higher
+HC04_MOE_VC17,Percent Males; Margin of Error; Percent high school graduate or higher
+HC05_EST_VC17,Females; Estimate; Percent high school graduate or higher
+HC05_MOE_VC17,Females; Margin of Error; Percent high school graduate or higher
+HC06_EST_VC17,Percent Females; Estimate; Percent high school graduate or higher
+HC06_MOE_VC17,Percent Females; Margin of Error; Percent high school graduate or higher
+HC01_EST_VC18,Total; Estimate; Percent bachelor's degree or higher
+HC01_MOE_VC18,Total; Margin of Error; Percent bachelor's degree or higher
+HC02_EST_VC18,Percent; Estimate; Percent bachelor's degree or higher
+HC02_MOE_VC18,Percent; Margin of Error; Percent bachelor's degree or higher
+HC03_EST_VC18,Males; Estimate; Percent bachelor's degree or higher
+HC03_MOE_VC18,Males; Margin of Error; Percent bachelor's degree or higher
+HC04_EST_VC18,Percent Males; Estimate; Percent bachelor's degree or higher
+HC04_MOE_VC18,Percent Males; Margin of Error; Percent bachelor's degree or higher
+HC05_EST_VC18,Females; Estimate; Percent bachelor's degree or higher
+HC05_MOE_VC18,Females; Margin of Error; Percent bachelor's degree or higher
+HC06_EST_VC18,Percent Females; Estimate; Percent bachelor's degree or higher
+HC06_MOE_VC18,Percent Females; Margin of Error; Percent bachelor's degree or higher
+HC01_EST_VC20,Total; Estimate; Population 25 to 34 years
+HC01_MOE_VC20,Total; Margin of Error; Population 25 to 34 years
+HC02_EST_VC20,Percent; Estimate; Population 25 to 34 years
+HC02_MOE_VC20,Percent; Margin of Error; Population 25 to 34 years
+HC03_EST_VC20,Males; Estimate; Population 25 to 34 years
+HC03_MOE_VC20,Males; Margin of Error; Population 25 to 34 years
+HC04_EST_VC20,Percent Males; Estimate; Population 25 to 34 years
+HC04_MOE_VC20,Percent Males; Margin of Error; Population 25 to 34 years
+HC05_EST_VC20,Females; Estimate; Population 25 to 34 years
+HC05_MOE_VC20,Females; Margin of Error; Population 25 to 34 years
+HC06_EST_VC20,Percent Females; Estimate; Population 25 to 34 years
+HC06_MOE_VC20,Percent Females; Margin of Error; Population 25 to 34 years
+HC01_EST_VC21,Total; Estimate; Population 25 to 34 years - High school graduate or higher
+HC01_MOE_VC21,Total; Margin of Error; Population 25 to 34 years - High school graduate or higher
+HC02_EST_VC21,Percent; Estimate; Population 25 to 34 years - High school graduate or higher
+HC02_MOE_VC21,Percent; Margin of Error; Population 25 to 34 years - High school graduate or higher
+HC03_EST_VC21,Males; Estimate; Population 25 to 34 years - High school graduate or higher
+HC03_MOE_VC21,Males; Margin of Error; Population 25 to 34 years - High school graduate or higher
+HC04_EST_VC21,Percent Males; Estimate; Population 25 to 34 years - High school graduate or higher
+HC04_MOE_VC21,Percent Males; Margin of Error; Population 25 to 34 years - High school graduate or higher
+HC05_EST_VC21,Females; Estimate; Population 25 to 34 years - High school graduate or higher
+HC05_MOE_VC21,Females; Margin of Error; Population 25 to 34 years - High school graduate or higher
+HC06_EST_VC21,Percent Females; Estimate; Population 25 to 34 years - High school graduate or higher
+HC06_MOE_VC21,Percent Females; Margin of Error; Population 25 to 34 years - High school graduate or higher
+HC01_EST_VC22,Total; Estimate; Population 25 to 34 years - Bachelor's degree or higher
+HC01_MOE_VC22,Total; Margin of Error; Population 25 to 34 years - Bachelor's degree or higher
+HC02_EST_VC22,Percent; Estimate; Population 25 to 34 years - Bachelor's degree or higher
+HC02_MOE_VC22,Percent; Margin of Error; Population 25 to 34 years - Bachelor's degree or higher
+HC03_EST_VC22,Males; Estimate; Population 25 to 34 years - Bachelor's degree or higher
+HC03_MOE_VC22,Males; Margin of Error; Population 25 to 34 years - Bachelor's degree or higher
+HC04_EST_VC22,Percent Males; Estimate; Population 25 to 34 years - Bachelor's degree or higher
+HC04_MOE_VC22,Percent Males; Margin of Error; Population 25 to 34 years - Bachelor's degree or higher
+HC05_EST_VC22,Females; Estimate; Population 25 to 34 years - Bachelor's degree or higher
+HC05_MOE_VC22,Females; Margin of Error; Population 25 to 34 years - Bachelor's degree or higher
+HC06_EST_VC22,Percent Females; Estimate; Population 25 to 34 years - Bachelor's degree or higher
+HC06_MOE_VC22,Percent Females; Margin of Error; Population 25 to 34 years - Bachelor's degree or higher
+HC01_EST_VC24,Total; Estimate; Population 35 to 44 years
+HC01_MOE_VC24,Total; Margin of Error; Population 35 to 44 years
+HC02_EST_VC24,Percent; Estimate; Population 35 to 44 years
+HC02_MOE_VC24,Percent; Margin of Error; Population 35 to 44 years
+HC03_EST_VC24,Males; Estimate; Population 35 to 44 years
+HC03_MOE_VC24,Males; Margin of Error; Population 35 to 44 years
+HC04_EST_VC24,Percent Males; Estimate; Population 35 to 44 years
+HC04_MOE_VC24,Percent Males; Margin of Error; Population 35 to 44 years
+HC05_EST_VC24,Females; Estimate; Population 35 to 44 years
+HC05_MOE_VC24,Females; Margin of Error; Population 35 to 44 years
+HC06_EST_VC24,Percent Females; Estimate; Population 35 to 44 years
+HC06_MOE_VC24,Percent Females; Margin of Error; Population 35 to 44 years
+HC01_EST_VC25,Total; Estimate; Population 35 to 44 years - High school graduate or higher
+HC01_MOE_VC25,Total; Margin of Error; Population 35 to 44 years - High school graduate or higher
+HC02_EST_VC25,Percent; Estimate; Population 35 to 44 years - High school graduate or higher
+HC02_MOE_VC25,Percent; Margin of Error; Population 35 to 44 years - High school graduate or higher
+HC03_EST_VC25,Males; Estimate; Population 35 to 44 years - High school graduate or higher
+HC03_MOE_VC25,Males; Margin of Error; Population 35 to 44 years - High school graduate or higher
+HC04_EST_VC25,Percent Males; Estimate; Population 35 to 44 years - High school graduate or higher
+HC04_MOE_VC25,Percent Males; Margin of Error; Population 35 to 44 years - High school graduate or higher
+HC05_EST_VC25,Females; Estimate; Population 35 to 44 years - High school graduate or higher
+HC05_MOE_VC25,Females; Margin of Error; Population 35 to 44 years - High school graduate or higher
+HC06_EST_VC25,Percent Females; Estimate; Population 35 to 44 years - High school graduate or higher
+HC06_MOE_VC25,Percent Females; Margin of Error; Population 35 to 44 years - High school graduate or higher
+HC01_EST_VC26,Total; Estimate; Population 35 to 44 years - Bachelor's degree or higher
+HC01_MOE_VC26,Total; Margin of Error; Population 35 to 44 years - Bachelor's degree or higher
+HC02_EST_VC26,Percent; Estimate; Population 35 to 44 years - Bachelor's degree or higher
+HC02_MOE_VC26,Percent; Margin of Error; Population 35 to 44 years - Bachelor's degree or higher
+HC03_EST_VC26,Males; Estimate; Population 35 to 44 years - Bachelor's degree or higher
+HC03_MOE_VC26,Males; Margin of Error; Population 35 to 44 years - Bachelor's degree or higher
+HC04_EST_VC26,Percent Males; Estimate; Population 35 to 44 years - Bachelor's degree or higher
+HC04_MOE_VC26,Percent Males; Margin of Error; Population 35 to 44 years - Bachelor's degree or higher
+HC05_EST_VC26,Females; Estimate; Population 35 to 44 years - Bachelor's degree or higher
+HC05_MOE_VC26,Females; Margin of Error; Population 35 to 44 years - Bachelor's degree or higher
+HC06_EST_VC26,Percent Females; Estimate; Population 35 to 44 years - Bachelor's degree or higher
+HC06_MOE_VC26,Percent Females; Margin of Error; Population 35 to 44 years - Bachelor's degree or higher
+HC01_EST_VC28,Total; Estimate; Population 45 to 64 years
+HC01_MOE_VC28,Total; Margin of Error; Population 45 to 64 years
+HC02_EST_VC28,Percent; Estimate; Population 45 to 64 years
+HC02_MOE_VC28,Percent; Margin of Error; Population 45 to 64 years
+HC03_EST_VC28,Males; Estimate; Population 45 to 64 years
+HC03_MOE_VC28,Males; Margin of Error; Population 45 to 64 years
+HC04_EST_VC28,Percent Males; Estimate; Population 45 to 64 years
+HC04_MOE_VC28,Percent Males; Margin of Error; Population 45 to 64 years
+HC05_EST_VC28,Females; Estimate; Population 45 to 64 years
+HC05_MOE_VC28,Females; Margin of Error; Population 45 to 64 years
+HC06_EST_VC28,Percent Females; Estimate; Population 45 to 64 years
+HC06_MOE_VC28,Percent Females; Margin of Error; Population 45 to 64 years
+HC01_EST_VC29,Total; Estimate; Population 45 to 64 years - High school graduate or higher
+HC01_MOE_VC29,Total; Margin of Error; Population 45 to 64 years - High school graduate or higher
+HC02_EST_VC29,Percent; Estimate; Population 45 to 64 years - High school graduate or higher
+HC02_MOE_VC29,Percent; Margin of Error; Population 45 to 64 years - High school graduate or higher
+HC03_EST_VC29,Males; Estimate; Population 45 to 64 years - High school graduate or higher
+HC03_MOE_VC29,Males; Margin of Error; Population 45 to 64 years - High school graduate or higher
+HC04_EST_VC29,Percent Males; Estimate; Population 45 to 64 years - High school graduate or higher
+HC04_MOE_VC29,Percent Males; Margin of Error; Population 45 to 64 years - High school graduate or higher
+HC05_EST_VC29,Females; Estimate; Population 45 to 64 years - High school graduate or higher
+HC05_MOE_VC29,Females; Margin of Error; Population 45 to 64 years - High school graduate or higher
+HC06_EST_VC29,Percent Females; Estimate; Population 45 to 64 years - High school graduate or higher
+HC06_MOE_VC29,Percent Females; Margin of Error; Population 45 to 64 years - High school graduate or higher
+HC01_EST_VC30,Total; Estimate; Population 45 to 64 years - Bachelor's degree or higher
+HC01_MOE_VC30,Total; Margin of Error; Population 45 to 64 years - Bachelor's degree or higher
+HC02_EST_VC30,Percent; Estimate; Population 45 to 64 years - Bachelor's degree or higher
+HC02_MOE_VC30,Percent; Margin of Error; Population 45 to 64 years - Bachelor's degree or higher
+HC03_EST_VC30,Males; Estimate; Population 45 to 64 years - Bachelor's degree or higher
+HC03_MOE_VC30,Males; Margin of Error; Population 45 to 64 years - Bachelor's degree or higher
+HC04_EST_VC30,Percent Males; Estimate; Population 45 to 64 years - Bachelor's degree or higher
+HC04_MOE_VC30,Percent Males; Margin of Error; Population 45 to 64 years - Bachelor's degree or higher
+HC05_EST_VC30,Females; Estimate; Population 45 to 64 years - Bachelor's degree or higher
+HC05_MOE_VC30,Females; Margin of Error; Population 45 to 64 years - Bachelor's degree or higher
+HC06_EST_VC30,Percent Females; Estimate; Population 45 to 64 years - Bachelor's degree or higher
+HC06_MOE_VC30,Percent Females; Margin of Error; Population 45 to 64 years - Bachelor's degree or higher
+HC01_EST_VC32,Total; Estimate; Population 65 years and over
+HC01_MOE_VC32,Total; Margin of Error; Population 65 years and over
+HC02_EST_VC32,Percent; Estimate; Population 65 years and over
+HC02_MOE_VC32,Percent; Margin of Error; Population 65 years and over
+HC03_EST_VC32,Males; Estimate; Population 65 years and over
+HC03_MOE_VC32,Males; Margin of Error; Population 65 years and over
+HC04_EST_VC32,Percent Males; Estimate; Population 65 years and over
+HC04_MOE_VC32,Percent Males; Margin of Error; Population 65 years and over
+HC05_EST_VC32,Females; Estimate; Population 65 years and over
+HC05_MOE_VC32,Females; Margin of Error; Population 65 years and over
+HC06_EST_VC32,Percent Females; Estimate; Population 65 years and over
+HC06_MOE_VC32,Percent Females; Margin of Error; Population 65 years and over
+HC01_EST_VC33,Total; Estimate; Population 65 years and over - High school graduate or higher
+HC01_MOE_VC33,Total; Margin of Error; Population 65 years and over - High school graduate or higher
+HC02_EST_VC33,Percent; Estimate; Population 65 years and over - High school graduate or higher
+HC02_MOE_VC33,Percent; Margin of Error; Population 65 years and over - High school graduate or higher
+HC03_EST_VC33,Males; Estimate; Population 65 years and over - High school graduate or higher
+HC03_MOE_VC33,Males; Margin of Error; Population 65 years and over - High school graduate or higher
+HC04_EST_VC33,Percent Males; Estimate; Population 65 years and over - High school graduate or higher
+HC04_MOE_VC33,Percent Males; Margin of Error; Population 65 years and over - High school graduate or higher
+HC05_EST_VC33,Females; Estimate; Population 65 years and over - High school graduate or higher
+HC05_MOE_VC33,Females; Margin of Error; Population 65 years and over - High school graduate or higher
+HC06_EST_VC33,Percent Females; Estimate; Population 65 years and over - High school graduate or higher
+HC06_MOE_VC33,Percent Females; Margin of Error; Population 65 years and over - High school graduate or higher
+HC01_EST_VC34,Total; Estimate; Population 65 years and over - Bachelor's degree or higher
+HC01_MOE_VC34,Total; Margin of Error; Population 65 years and over - Bachelor's degree or higher
+HC02_EST_VC34,Percent; Estimate; Population 65 years and over - Bachelor's degree or higher
+HC02_MOE_VC34,Percent; Margin of Error; Population 65 years and over - Bachelor's degree or higher
+HC03_EST_VC34,Males; Estimate; Population 65 years and over - Bachelor's degree or higher
+HC03_MOE_VC34,Males; Margin of Error; Population 65 years and over - Bachelor's degree or higher
+HC04_EST_VC34,Percent Males; Estimate; Population 65 years and over - Bachelor's degree or higher
+HC04_MOE_VC34,Percent Males; Margin of Error; Population 65 years and over - Bachelor's degree or higher
+HC05_EST_VC34,Females; Estimate; Population 65 years and over - Bachelor's degree or higher
+HC05_MOE_VC34,Females; Margin of Error; Population 65 years and over - Bachelor's degree or higher
+HC06_EST_VC34,Percent Females; Estimate; Population 65 years and over - Bachelor's degree or higher
+HC06_MOE_VC34,Percent Females; Margin of Error; Population 65 years and over - Bachelor's degree or higher
