@@ -24,6 +24,11 @@ The packages used in this study are `dplyr`, `rvest`, `ggplot2`, `zoo`, `openint
 
 The learning objectives include data cleaning and manipulation, problem solving, scraping data from the web, cleaning text, merging data frames, poisson regression and significance testing.
 
+Load libraries
+```{r}
+library(dplyr)
+```
+
 # What is the data?
 This study uses data from many different sources.
 
@@ -51,6 +56,9 @@ crime <- read_excel("data/table_5_crime_in_the_united_states_by_state_2015.xls",
 head(crime[, 1:5])
 land <- read_excel("data/LND01.xls", sheet = 1)
 head(land[, 1:5])
+suicide_all <- read.csv("data/suicide_all.csv",stringsAsFactors = FALSE)
+head(suicide_all[,1:5])
+suicide_firearm <- read.csv("data/suicide_firearm.csv",stringsAsFactors = FALSE)
 ```
 
 
@@ -83,7 +91,7 @@ For each state, we add rows in the column `POPESTIMATE2015` since we are looking
 Setting the `ORIGIN` or `SEX` equal to 0 ensures we don't add duplicate data, since 0 is the key for both Hispanic and non Hispanic residents and total male and female residents.
 We group by each state since all data in this study is at the state level.
 ```{r}
-library(dplyr)
+
 census_stats <- census %>%
   filter(ORIGIN == 0, SEX == 0) %>%
   group_by(NAME) %>%
@@ -107,6 +115,8 @@ census_stats$total_pop <- census %>%
   group_by(NAME) %>%
   summarize(total = sum(POPESTIMATE2015)) %>%
   pull(total)
+
+census_stats$NAME <- tolower(census_stats$NAME)
 
 head(census_stats)
 ```
@@ -137,6 +147,7 @@ age_stats <- as.data.frame(apply(age_stats, 2, cumsum))
 age_stats <- as.data.frame(apply(age_stats,2,function(x) x/x[86]))
 head(age_stats[, 1:6])
 census_stats$age <- apply(age_stats,2,function(x) which.max(x >= 0.5)-1)
+
 head(census_stats)
 ```
 ## 2. Violent Crime
@@ -166,6 +177,8 @@ Looking at our whole dataframe we can see some of the state names have numbers i
 violentcrime$State[20]
 violentcrime$State<-tolower(gsub('[0-9]+', '', violentcrime$State))
 violentcrime$State[20]
+p_df <- merge(census_stats,violentcrime,by.x="NAME", by.y = "State")
+head(p_df)
 ```
 
 ## 3. Brady Scores
@@ -182,8 +195,6 @@ colnames(brady)[1] <- "Law"
 brady <- brady %>%
   filter(Law == "TOTAL STATE POINTS")
 head(brady)
-```
-```{r}
 brady <- brady[,(ncol(brady) - 49):ncol(brady)]
 ```
 
@@ -200,6 +211,9 @@ In addition, this data frame's list of states is in two-letter state abbreviatio
 library(openintro)
 brady_totals$state <-tolower(abbr2state(brady_totals$state))
 head(brady_totals)
+
+p_df <- merge(p_df,brady_totals,by.x="NAME",by.y = "state")
+head(p_df)
 ```
 
 ## 4. The Counted Fatal Shootings
@@ -208,9 +222,8 @@ First we simply need to concatenate the two years of data.
 counted1516 <- rbind(counted15, counted16)
 head(counted1516)
 ```
-Again, this data frame's list of states is in two-letter state abbreviations so let's change that.
+Again, this data frame's list of states is in two-letter state abbreviations so let's change that and then merge with the rest of the data.
 ```{r}
-#library(openintro)
 counted1516$state <-tolower(abbr2state(counted1516$state))
 ```
 In the study, researchers "calculated descriptive statistics for the proportion of victims that were male, armed, and non-White." Thus we repeat here easily with `dplyr`. `tally` is used to count the number of observations in each group.
@@ -231,7 +244,7 @@ counted_stats$gunshot_filtered <- counted1516 %>%
 colnames(counted_stats)[2] <- "gunshot_tally"
 counted_stats$gunshot_rate <- (counted_stats$gunshot_tally/census_stats$total_pop)*1000000
 head(counted_stats)
-
+p_df <- merge(p_df,counted_stats,by.x="NAME",by.y = "state")
 ```
 ## 5. Unemployment Data
 This data is available online from the BLS, but there is no easy download of the table. It is also difficult to simply copy and paste; it doesn't hold it's table format. Thus, let's set up a web scraper to get the data.
@@ -261,6 +274,11 @@ colnames(unemployment)[1] <- "state"
 unemployment <- arrange(unemployment, state)
 head(unemployment)
 ```
+```{r}
+unemployment$state <- tolower(unemployment$state)
+p_df <- merge(p_df,unemployment,by.x="NAME",by.y = "state")
+```
+
 ## 6. Population Density 2015
 To manually find population density, we can calculate total 2015 population from the Census data and import land area to calculate population density. This is caculated because "good"" data for state population in 2015 was not available in a downloadable format and/or was not easy to scrape.
 
@@ -293,7 +311,71 @@ popdensity$total <- NULL
 popdensity$land_area <-NULL
 
 head(popdensity)
+
+p_df <- merge(p_df,popdensity,by="NAME")
 ```
+
+## 8. Firearm Ownership
+Calculate firearm ownership as a percent of firearm suicides to all suicides.
+```{r}
+ownership_df <- data.frame("NAME" = tolower(suicide_all$State), 
+                           "ownership" = suicide_firearm$Deaths/suicide_all$Deaths*100)
+p_df <- merge(p_df,ownership_df,by="NAME")
+```
+
+# Exploratory data analysis
+Let's examine the fatal police shooting data and see if the data is poisson distributed.
+First let's divide the total number of shooting by the total population. Then, we'll generate the expected rate for each state based on our expected rate $\lambda$ and the state population.
+```{r}
+#(lambda <- sum(p_df$gunshot_tally)/sum(p_df$total_pop/1000))
+(lambda <- sum(p_df$gunshot_tally)/sum(p_df$total_pop)) # mean number of fatal shootings per 1000000
+# calculate probability of observing each number of shootings
+# then multiply by total ... number of people?
+
+t <- dpois(c(0:100), lambda, log = FALSE)
+expected <- c(1:50)
+for (i in c(1:50))
+{
+  expected[i] <- lambda*p_df$total_pop[i] #sum(t*p_df$total_pop[i])/100000
+}
+```
+
+Now use Pearson's goodness of fit chi-square to see if a Poisson model is appropriate.
+
+[A helpful link](https://chemicalstatistician.wordpress.com/2013/04/14/checking-the-goodness-of-fit-of-the-poisson-distribution-for-alpha-decay-by-americium-241/)
+```{r}
+chi.squared = (p_df$gunshot_tally - expected)^2/expected
+(chi.squared.statistic = sum(chi.squared))
+(p.value = pchisq(chi.squared.statistic, 50-2, lower.tail =F))
+
+```
+Test negative binomial and poisson
+```{r}
+library(MASS)
+
+summary(m1 <- glm(gunshot_tally ~  brady_scores + 
+                  offset(log(total_pop)), 
+                  family="poisson", data = p_df))
+exp(confint.default(m1))
+
+summary(m2 <- glm.nb(gunshot_tally ~ brady_scores + 
+                  offset(log(total_pop)), data=p_df))
+exp(confint.default(m2))
+
+summary(m3 <- glm(gunshot_tally ~  brady_scores + 
+                  offset(log(total_pop)), 
+                  family=quasipoisson(link="log"), data = p_df))
+exp(confint.default(m3))
+
+
+
+LRTstat = 2 * (logLik(m2) - logLik(m1))
+df = 1
+pval = pval = 1-pchisq(LRTstat, df)
+paste0("LRT test statistic = ", round(LRTstat,2), ", df = ", df, ", p-value = ", round(pval,3))
+```
+
+
 # Data analysis
 ## Poisson regression
 ### 1. No adjustment
@@ -307,10 +389,6 @@ library(ggrepel)
 require(sandwich)
 require(msm)
 
-census_stats$NAME <- tolower(census_stats$NAME)
-p_df <- merge(brady_totals,counted_stats,by="state")
-p_df <- merge(p_df,census_stats,by.x="state", by.y = "NAME")
-
 summary(m1 <- glm(gunshot_tally ~  brady_scores + 
                   offset(log(total_pop)), 
                   family="poisson", data = p_df))
@@ -319,7 +397,7 @@ df1 <- data.frame("resultY" =
                   exp(m1$coefficients[1])*exp(m1$coefficients[2]*p_df$brady_scores)*1000000/2,
                   "brady" = p_df$brady_scores,
                   "rates" = p_df$gunshot_tally/p_df$total_pop*1000000/2,
-                  "abr" = state2abbr(p_df$state),
+                  "abr" = state2abbr(p_df$NAME),
                   stringsAsFactors=FALSE) 
 
 plt<- ggplot(df1, aes(x = brady)) + 
@@ -333,9 +411,6 @@ plt<- ggplot(df1, aes(x = brady)) +
 plt
 (plt <- plt +  geom_text_repel(aes(y = rates,label=abr)))
 
-```
-```{r}
-str(df1)
 ```
 
 Standard robust errors for parameter estimates
@@ -354,23 +429,7 @@ We now construct a multivariate model to account "for state-level sociodemograph
 $$\mu = t\exp{\beta_{0}}\exp{\beta_{1}X_{1}}...\exp{\beta_{6}X_{6}}$$
 ```{r}
 # mv for multivariate
-summary(m2 <- glm(gunshot_tally ~  brady_scores + white + black + hispanic + male + age + offset(log(total_pop)), family="poisson", data = p_df))
-
-m2_Xvars <- p_df %>%
-  select(brady_scores,white,black,hispanic,male,age)
-m2_Xvars$coef <- 1
-m2_Xvars <- m2_Xvars[,c(7,1,2,3,4,5,6)]
-X<- t(t(m2_Xvars)*(m2$coefficients))
-# multiple e^col for each column in X
-
-test <- rowSums(X[,2:7])
-test <- exp(test)*X[,1]
-
-df2 <- as.data.frame(test)
-df2$X <- p_df$brady_scores
-df2$trueY <- p_df$gunshot_tally
-
-#ggplot(dat, aes(x = X)) + geom_point(aes(y = trueY, color = "data")) + geom_line(aes(y = test , color = "fitted")) + ggtitle("Fatal Police Shootings Poisson Regression") + ylab("Rate Per 1M Residents") + xlab("Brady Scores")
+summary(mv <- glm(gunshot_tally ~  brady_scores + white + black + hispanic + male + age + ownership + offset(log(total_pop)), family="poisson", data = p_df))
 ```
 ## Absolute Rate Differences
 
@@ -419,6 +478,21 @@ table2 %>%
       caption ="Change in Overall Fatal Police Shootings by State-Level Firearm Legislative Strength Quartile: United States, January 1, 2015–December 31, 2016") %>% 
   kable_styling(full_width = F) %>%
   add_header_above(c(" " = 3, "Unadjusted" = 3))
+```
+
+## Sobel Test
+```{r}
+library(mediation)
+
+med.fit <- lm(ownership ~ brady_scores + white + black + hispanic + male + age, data = p_df)
+out.fit <- glm(gunshot_tally ~ ownership + white + black + hispanic + male + age +
+                 brady_scores + 
+                 offset(log(total_pop)), 
+                family="poisson", data = p_df)
+med.out <- mediate(med.fit, out.fit, treat = "brady_scores", mediator = "ownership",
+                   robustSE = TRUE, sims = 100)
+
+summary(med.out)
 ```
 
 
