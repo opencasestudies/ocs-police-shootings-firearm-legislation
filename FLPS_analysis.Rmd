@@ -324,32 +324,30 @@ p_df <- merge(p_df,ownership_df,by="NAME")
 ```
 
 # Exploratory data analysis
-Let's examine the fatal police shooting data and see if the data is poisson distributed.
-First let's divide the total number of shooting by the total population. Then, we'll generate the expected rate for each state based on our expected rate $\lambda$ and the state population.
-```{r}
-#(lambda <- sum(p_df$gunshot_tally)/sum(p_df$total_pop/1000))
-(lambda <- sum(p_df$gunshot_tally)/sum(p_df$total_pop)) # mean number of fatal shootings per 1000000
-# calculate probability of observing each number of shootings
-# then multiply by total ... number of people?
+## Poisson fit
+First let's determine if the fatal police shooting data is poisson distributed. We are guessing that it is poisson distributed because the shootings are discrete events over a fixed interval of time or space. Our data is number of shootings in each state over the time frame of 2 years and for the total population in each state.
 
-t <- dpois(c(0:100), lambda, log = FALSE)
-expected <- c(1:50)
-for (i in c(1:50))
-{
-  expected[i] <- lambda*p_df$total_pop[i] #sum(t*p_df$total_pop[i])/100000
-}
+We divide the total number of shootings by the total population to get our parameter $\lambda$: the mean number of shootings per person per two years time.
+Then, we generate the expected rate for each state based on $\lambda$ and the state's population since the expected value of the distribution is $\lambda$.
+```{r}
+(lambda <- sum(p_df$gunshot_tally)/sum(p_df$total_pop))
+expected <- lambda*p_df$total_pop
 ```
 
-Now use Pearson's goodness of fit chi-square to see if a Poisson model is appropriate.
+Now that we've calculated the expected number of fatal police shootings in each state, we can use Pearson's goodness of fit chi-squared test to see if the data does indeed follow a poisson distribution. Our test statistic is
+$$\chi^2 = \sum_{i=1}^{n} \frac{(O_{i} - E{i})^{2}}{E_{i}}$$
+where $O_{i}$ denotes the observed value in state $i$ and $E_{i}$ denotes the expected value in state $i$ if the data is poisson distributed.
 
-[A helpful link](https://chemicalstatistician.wordpress.com/2013/04/14/checking-the-goodness-of-fit-of-the-poisson-distribution-for-alpha-decay-by-americium-241/)
+Here's [a helpful link](https://chemicalstatistician.wordpress.com/2013/04/14/checking-the-goodness-of-fit-of-the-poisson-distribution-for-alpha-decay-by-americium-241/).
 ```{r}
 chi.squared = (p_df$gunshot_tally - expected)^2/expected
 (chi.squared.statistic = sum(chi.squared))
 (p.value = pchisq(chi.squared.statistic, 50-2, lower.tail =F))
-
+expected
 ```
-Test negative binomial and poisson
+Our resulting test statistic is large so our p-value is very small, telling us that we should reject our null hypothesis that the data is poisson distributed.
+
+Next we look at if a poisson model, a negative binomial, or a quassi-poisson are more appropriate.
 ```{r}
 library(MASS)
 
