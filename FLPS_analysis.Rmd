@@ -18,15 +18,16 @@ knitr::opts_chunk$set(echo = TRUE)
 # Motivation
 We will recreate a study by the American Journal of Public Health ["to examine whether stricter firearm legislation is associated with rates of fatal police shootings."](https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770)
 
-The bulk of this code will consist of collecting, cleaning and manipulating data in order to control for potential covariates. We will also run a poisson regression and tests of statistical significance.
+The bulk of this code will consist of collecting, cleaning and manipulating data in order to control for potential covariates. We will also run a Poisson regression and tests of statistical significance.
 
 The packages used in this study are `dplyr`, `rvest`, `ggplot2`, `zoo`, `openintro`, `readxl`, `data.table`, and `sandwich`. If you are running this code please insure you have these packages installed.
 
-The learning objectives include data cleaning and manipulation, problem solving, scraping data from the web, cleaning text, merging data frames, poisson regression and significance testing.
+The learning objectives include data cleaning and manipulation, problem solving, scraping data from the web, cleaning text, merging data frames, Poisson regression and significance testing.
 
 Load libraries
 ```{r}
 library(dplyr)
+library(ggplot2)
 ```
 
 # What is the data?
@@ -325,83 +326,141 @@ p_df <- merge(p_df,ownership_df,by="NAME")
 
 # Exploratory data analysis
 ## Poisson fit
-First let's determine if the fatal police shooting data is poisson distributed. We are guessing that it is poisson distributed because the shootings are discrete events over a fixed interval of time or space. Our data is number of shootings in each state over the time frame of 2 years and for the total population in each state.
+First let's determine if the fatal police shooting data is Poisson distributed. This is possible because the shootings are discrete events over a fixed interval of time or space.
 
-We divide the total number of shootings by the total population to get our parameter $\lambda$: the mean number of shootings per person per two years time.
-Then, we generate the expected rate for each state based on $\lambda$ and the state's population since the expected value of the distribution is $\lambda$.
+We take the mean of the fatal shootings to get our parameter $\lambda$. This is the expected value of fatal police shootings in each state for the years 2015-16. It is also the variance.
 ```{r}
-(lambda <- sum(p_df$gunshot_tally)/sum(p_df$total_pop))
-expected <- lambda*p_df$total_pop
+p_df$ones <- 1
+(lambda = mean(p_df$gunshot_tally))
+expected <- lambda*p_df$ones
+
 ```
 
-Now that we've calculated the expected number of fatal police shootings in each state, we can use Pearson's goodness of fit chi-squared test to see if the data does indeed follow a poisson distribution. Our test statistic is
+Now that we've calculated the expected number of shootings, we can use Pearson's chi-squared test (goodness of fit) to see if the data does indeed follow a Poisson distribution. Our test statistic is
 $$\chi^2 = \sum_{i=1}^{n} \frac{(O_{i} - E{i})^{2}}{E_{i}}$$
-where $O_{i}$ denotes the observed value in state $i$ and $E_{i}$ denotes the expected value in state $i$ if the data is poisson distributed.
+where $O_{i}$ denotes the observed value in state $i$ and $E_{i}$ denotes the expected value in state $i$ if the data is Poisson distributed.
 
 Here's [a helpful link](https://chemicalstatistician.wordpress.com/2013/04/14/checking-the-goodness-of-fit-of-the-poisson-distribution-for-alpha-decay-by-americium-241/).
 ```{r}
 chi.squared = (p_df$gunshot_tally - expected)^2/expected
 (chi.squared.statistic = sum(chi.squared))
 (p.value = pchisq(chi.squared.statistic, 50-2, lower.tail =F))
-expected
 ```
-Our resulting test statistic is large so our p-value is very small, telling us that we should reject our null hypothesis that the data is poisson distributed.
+Our resulting test statistic is large so our p-value is very small (so small that it rounds to 0), indicating that we should reject our null hypothesis that the data is Poisson distributed.
 
-Next we look at if a poisson model, a negative binomial, or a quassi-poisson are more appropriate.
+Let's repeat this analysis using the R built in glm function results, for both the null model `m0`, the most basic model with the brady scores as the only explanatory variable `m1`, and the full model `mv` with multiple variables. We can simply square the Pearson residuals, $$r_{i} =  \frac{O_{i} - E_{i}}{\sqrt{E_{i}}}$$ to get Pearson's chi-squared statistic as before.
+
+First we fit the null model as we did previously.
+
+```{r}
+m0 <- glm(gunshot_tally ~  1,
+                  family="poisson", data = p_df)
+
+(chi.squared.stat.m0 = sum(residuals(m0, type = "pearson")^2))
+(p.value.m0 = pchisq(chi.squared.stat.m0, 50-2, lower.tail =F))
+
+
+```
+These results reflect our previous results.
+
+Next we fit the simplest model, using the brady scores as our explanatory variable $X$, followed by the multivariate model with statewise sociodemographic characteristics included.
+```{r}
+m1 <- glm(gunshot_tally ~  brady_scores + 
+                  offset(log(total_pop)), 
+                  family="poisson", data = p_df)
+
+(chi.squared.stat.m1 = sum(residuals(m1, type = "pearson")^2))
+(p.value.m1 = pchisq(chi.squared.stat.m1, 50-2, lower.tail =F))
+
+mv <- glm(gunshot_tally ~  brady_scores + 
+            white + 
+            black + 
+            hispanic + 
+            male + 
+            age + 
+            violent_crime +
+            ownership + 
+            offset(log(total_pop)), 
+          family="poisson", data = p_df)
+
+(chi.squared.stat.mv = sum(residuals(mv, type = "pearson")^2))
+(p.value.mv = pchisq(chi.squared.stat.mv, 50-2, lower.tail =F))
+```
+These results show that we still reject our null hypothesis that the data follows a Poisson distribution, even when incorporating other variables. However we note that our test statistic gets smaller as we add more variables to the model.
+
+We plot a histogram of the count data compared to a line graph of the Poisson distribution with the same $\lambda$ (average number of shootings) to visualize how the data deviates from Poisson.
+```{r}
+qplot(p_df$gunshot_tally,geom="histogram", binwidth = 1) + 
+  geom_line(aes(y=dpois(p_df$gunshot_tally, lambda = lambda)*50), colour="red",size = 1) + 
+  xlab("Number of fatal police shootings per state 2015-2016") + 
+  ylab("Frequency") + 
+  ggtitle("Poisson distribution and count data")
+```
+
+We observe that the data is quite skewed and does not fall tightly under the curve which may be contributing to the high values of our Pearson's chi-squared test statistic.
+
+Let us consider using a negative binomial to account for *overdispersion*, when the varaiance of the data is larger than the mean. Poisson models assume that the mean equals the variance, hence our model summary states "Dispersion parameter for Poisson family taken to be 1."
+
 ```{r}
 library(MASS)
 
-summary(m1 <- glm(gunshot_tally ~  brady_scores + 
-                  offset(log(total_pop)), 
-                  family="poisson", data = p_df))
-exp(confint.default(m1))
+summary(m1)
 
-summary(m2 <- glm.nb(gunshot_tally ~ brady_scores + 
+summary(m_nb <- glm.nb(gunshot_tally ~ brady_scores + 
                   offset(log(total_pop)), data=p_df))
-exp(confint.default(m2))
+```
+We observe that the standard errors increase for the negative binomial.
 
-summary(m3 <- glm(gunshot_tally ~  brady_scores + 
-                  offset(log(total_pop)), 
-                  family=quasipoisson(link="log"), data = p_df))
-exp(confint.default(m3))
-
-
-
-LRTstat = 2 * (logLik(m2) - logLik(m1))
+We will do the equivalent test of a Likelihood Ratio Test comparing the Poisson model to the negative binomial model to see if the relaxation of the mean=variance assumption is better.
+```{r}
+LRTstat = 2 * (logLik(m_nb) - logLik(m1))
 df = 1
 pval = pval = 1-pchisq(LRTstat, df)
-paste0("LRT test statistic = ", round(LRTstat,2), ", df = ", df, ", p-value = ", round(pval,3))
+paste0("LRT test statistic = ", round(LRTstat,2), ", df = ", df, ", p-value = ", pval)
+```
+Our test statistic is large and our p-value small (rounds to 0), indicating that we should reject the null hypothesis and conclude that a negative binomial model is better than Poisson.
+
+```{r}
+(est <- cbind(Estimate = coef(m_nb), confint(m_nb)))
+exp(est)
 ```
 
 
+We can also look at a quasi-poisson model, which retains the Poisson distibution assumption but removes the mean=variance assumption.
+```{r}
+summary(m_qp <- glm(gunshot_tally ~  brady_scores + 
+                  offset(log(total_pop)), 
+                  family=quasipoisson(link="log"), data = p_df))
+```
+We see in these results that our brady coefficient is no longer significant, and note that the dispersion parameter 8.909899 is very high.
+
+Thus we continue our analysis using the negative binomial regression model.
+
 # Data analysis
-## Poisson regression
-### 1. No adjustment
+## Negative Binomial regression
 
 $$\mu = t\exp{\beta_{0}}\exp{\beta_{1}X}$$
-
 $$\frac{\mu}{t} = \exp{\beta_{0}}\exp{\beta_{1}X}$$
-```{r}
-require(ggplot2)
-library(ggrepel)
-require(sandwich)
-require(msm)
 
-summary(m1 <- glm(gunshot_tally ~  brady_scores + 
-                  offset(log(total_pop)), 
-                  family="poisson", data = p_df))
+Here we plot the results of our negative binomial regresson on the reduced model.
+```{r}
+#require(ggplot2)
+library(ggrepel)
+#require(sandwich)
+#require(msm)
 
 df1 <- data.frame("resultY" = 
-                  exp(m1$coefficients[1])*exp(m1$coefficients[2]*p_df$brady_scores)*1000000/2,
+                  exp(m_nb$coefficients[1])*exp(m_nb$coefficients[2]*p_df$brady_scores)*1000000/2,
                   "brady" = p_df$brady_scores,
                   "rates" = p_df$gunshot_tally/p_df$total_pop*1000000/2,
                   "abr" = state2abbr(p_df$NAME),
                   stringsAsFactors=FALSE) 
 
+
 plt<- ggplot(df1, aes(x = brady)) + 
   geom_point(aes(y = rates, color = "data")) + 
   geom_line(aes(y = resultY , color = "fitted")) + 
-  ggtitle("Fatal Police Shootings Poisson Regression") + 
+  ggtitle("Negative Binomial Regression") + 
   ylab("Annualized Rate of Fatal Police Shootings per 1 000 000") + 
   xlab("Firearm Legislative Strength Score") + 
   theme_bw() + theme(plot.title = element_text(hjust = 0.5 ))
@@ -410,47 +469,45 @@ plt
 (plt <- plt +  geom_text_repel(aes(y = rates,label=abr)))
 
 ```
-
-Standard robust errors for parameter estimates
+We analyze the multivariate negative binomial model.
 ```{r}
-cov.m1 <- vcovHC(m1, type="HC0")
-std.err <- sqrt(diag(cov.m1))
-r.est <- cbind(Estimate= coef(m1), "Robust SE" = std.err,
-"Pr(>|z|)" = 2 * pnorm(abs(coef(m1)/std.err), lower.tail=FALSE),
-LL = coef(m1) - 1.96 * std.err,
-UL = coef(m1) + 1.96 * std.err)
-r.est
+mv_nb <- glm.nb(gunshot_tally ~  brady_scores + 
+            white + 
+            black + 
+            hispanic + 
+            male + 
+            age + 
+            violent_crime +
+            offset(log(total_pop)),
+            data = p_df)
+summary(mv_nb)
 ```
-### 2. Sociodemographic adjustment
-We now construct a multivariate model to account "for state-level sociodemographic characteristics."
 
-$$\mu = t\exp{\beta_{0}}\exp{\beta_{1}X_{1}}...\exp{\beta_{6}X_{6}}$$
-```{r}
-# mv for multivariate
-summary(mv <- glm(gunshot_tally ~  brady_scores + white + black + hispanic + male + age + ownership + offset(log(total_pop)), family="poisson", data = p_df))
-```
 ## Absolute Rate Differences
-
+We group the states into 4 quartiles and then calculate absolute rates, the mean annualized rate of fatal police shootings per 1,000,000. Then we find absolute rate differences between the first group of states (with the fewest/weakest firearm laws) compared to the other 3 groups. Finally we calculate confidence intervals and point estimates for the incidence rate ratios (IRR), where we again compare the 1st group of states to the other 3 groups.
 
 http://sphweb.bumc.bu.edu/otlt/MPH-Modules/QuantCore/PH717_ComparingFrequencies/PH717_ComparingFrequencies9.html
 ```{r}
 library(kableExtra)
-df1$count <- p_df$gunshot_tally
-df1<-df1[order(df1$brady),]
-
+#df1$count <- p_df$gunshot_tally
+df1<-p_df[order(p_df$brady),]
+head(df1)
 table2<-data.frame("brady" = c(1:4), 
-                   "mean_rates" = c(mean(df1$rates[1:12]),
-                                    mean(df1$rates[13:25]),
-                                    mean(df1$rates[26:38]),
-                                    mean(df1$rates[39:50])))
+                   "mean_rates" = c(mean(df1$gunshot_rate[1:12])/2,
+                                    mean(df1$gunshot_rate[13:25])/2,
+                                    mean(df1$gunshot_rate[26:38])/2,
+                                    mean(df1$gunshot_rate[39:50])/2))
 
-table2$count_quartiles <- c(mean(df1$count[1:12]),
-                                    mean(df1$count[13:25]),
-                                    mean(df1$count[26:38]),
-                                    mean(df1$count[39:50]))
+table2$count_quartiles <- c(mean(df1$gunshot_tally[1:12])/2,
+                                    mean(df1$gunshot_tally[13:25])/2,
+                                    mean(df1$gunshot_tally[26:38])/2,
+                                    mean(df1$gunshot_tally[39:50])/2)
 
+
+table2
 table2$rate_diff <- abs(table2$mean_rates - table2$mean_rates[1])
 table2$rate_ratio <- table2$mean_rates/table2$mean_rates[1]
+
 
 table2$CI.L <-0
 table2$CI.U <-0
@@ -476,9 +533,35 @@ table2 %>%
       caption ="Change in Overall Fatal Police Shootings by State-Level Firearm Legislative Strength Quartile: United States, January 1, 2015–December 31, 2016") %>% 
   kable_styling(full_width = F) %>%
   add_header_above(c(" " = 3, "Unadjusted" = 3))
+
+```
+```{r}
+# test_df <- c(mean(df1$total_pop[1:12])/2,
+#                                     mean(df1$total_pop[13:25])/2,
+#                                     mean(df1$total_pop[26:38])/2,
+#                                     mean(df1$total_pop[39:50])/2)
+# 
+# test_df = t(test_df)
+# test_df2 = as.data.frame(t(table2$mean_rates))
+# test_df2
+# mv_nb <- glm.nb(. ~  1 +
+#             offset(log(group_pop)),
+#             data = test_df2)
 ```
 
+## Correlation Analysis
+Spearman $\rho$ for Fatal Police Shooting Rate
+```{r}
+corr <- cor.test(x=p_df$gunshot_rate, y=p_df$ownership, method = 'spearman')
+corr
+```
+
+
+
+
+
 ## Sobel Test
+
 ```{r}
 library(mediation)
 
@@ -492,6 +575,7 @@ med.out <- mediate(med.fit, out.fit, treat = "brady_scores", mediator = "ownersh
 
 summary(med.out)
 ```
+
 
 
 # Summary of results
