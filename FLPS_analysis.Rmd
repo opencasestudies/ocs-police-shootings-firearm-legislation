@@ -20,7 +20,7 @@ We will recreate a study by the American Journal of Public Health ["to examine w
 
 The bulk of this code will consist of collecting, cleaning and manipulating data in order to control for potential covariates. We will also run a Poisson regression and tests of statistical significance.
 
-The packages used in this study are `dplyr`, `rvest`, `ggplot2`, `zoo`, `openintro`, `readxl`, `data.table`, and `sandwich`. If you are running this code please insure you have these packages installed.
+The libraries used in this study are `dplyr`, `rvest`, `ggplot2`, `zoo`, `openintro`, `readxl`, `data.table`, `mediation`, `MASS`,`ggrepel`, and `kableExtra`. In order to run this code please ensure you have these packages installed.
 
 The learning objectives include data cleaning and manipulation, problem solving, scraping data from the web, cleaning text, merging data frames, Poisson regression and significance testing.
 
@@ -281,7 +281,7 @@ p_df <- merge(p_df,unemployment,by.x="NAME",by.y = "state")
 ## 6. Population Density 2015
 To manually find population density, we can calculate total 2015 population from the Census data and import land area to calculate population density. This is caculated because "good" data for state population in 2015 was not available in a downloadable format and/or was not easy to scrape.
 
-I select `LND110210D` because I looked at the data table at https://www.census.gov/geo/reference/state-area.html and compared values to find the correct column. This one corresponds to land area in square miles.
+We select `LND110210D` by looking at the [table](https://www.census.gov/geo/reference/state-area.html) and comparing values on other sites (such as the census or Wikipedia) to find the correct column. This column corresponds to land area in square miles.
 ```{r}
 library(dplyr)
 totalPop <- census %>%
@@ -430,11 +430,10 @@ Thus we continue our analysis using the negative binomial regression model.
 In the study, "We employed a 2-step approach used in previous firearm research to select covariates for the adjusted regression models.First, we identified variables correlated (Spearman’s r) with the outcome at 0.300 or greater. Then, to address concerns with collinearity, we excluded those covariates that were highly correlated with other covariates."
 
 Thus we calculate Spearman's $\rho$ for the fatal police shooting rate in each state with all other relevant variables.
-NOTE TO SELF: ROUND NUMBERS PRINTED
 ```{r}
 for(col in c(2,3,4,5,7,8,13,15,16)){
     corr <- cor.test(x=p_df[,12], y=p_df[,col], method = 'spearman',exact=FALSE)
-    print(paste0(colnames(p_df)[col], " correlation with fatal shooting rate: " , corr$estimate))
+    print(paste0(colnames(p_df)[col], " correlation with fatal shooting rate: " , round(corr$estimate, digits = 3)))
   }
 ```
 We see that the data for percent of white residents, percent of black residents, percent of hispanic residents, and unemployment rate do not have a correlation stronger than 0.3 (or -0.3). We leave variables these out of the rest of our analysis.
@@ -446,7 +445,9 @@ for(col1 in c(5,7,8,15,16)){
     if(col1!=col2){
     corr <- cor.test(x=p_df[,col1], y=p_df[,col2], method = 'spearman',exact=FALSE)
       if(corr$estimate>= 0.3 | corr$estimate <= -.3){
-        print(paste0(colnames(p_df)[col1], " correlation with ", colnames(p_df)[col2], ": ",corr$estimate))
+        print(paste0(colnames(p_df)[col1], " correlation with ",
+                     colnames(p_df)[col2], ": ",
+                     round((corr$estimate),digits = 3)))
       }
     }
   }
@@ -587,18 +588,32 @@ We just observed that adding gun ownership rates had a large effect on our incid
 </center>
 (graphic ) where X is the Brady scores and other variables, Y is the fatal shooting rate, and M is the mediating factor gun ownership.
 
+To complete this test we import the package `mediation` and fit two models: one with the mediating factor `ownership` as the response variable, and the other with `ownership` included in the predictor variables and the `gunshot_tally` as our response as before.
+
+More information on this R package can be viewed [here](https://cran.r-project.org/web/packages/mediation/vignettes/mediation.pdf).
+
+Negative binomial models are not permitted mediator model types for this R package so we use Poisson instead.
 ```{r}
 library(mediation)
 
-med.fit <- lm(ownership ~ brady_scores + age + violent_crime, data = p_df)
-out.fit <- glm(gunshot_tally ~ ownership + brady_scores + age  + violent_crime + offset(log(total_pop)), 
+med.fit <- lm(ownership ~ brady_scores, data = p_df)
+out.fit <- glm(gunshot_tally ~ ownership + brady_scores + offset(log(total_pop)), 
                 family="poisson", data = p_df)
 med.out <- mediate(med.fit, out.fit, treat = "brady_scores", mediator = "ownership",
                    robustSE = TRUE, sims = 100)
 
 summary(med.out)
+med.out$d0 - med.out$d1
 ```
+"The average causal mediation effects (ACME) and the average direct effects (ADE) represent the population averages of these causal mediation and direct effects."
+
+With this output, one can perform statistical tests on the differences between the "control" and "treated" groups.
 
 # Summary of results
+Our analysis deviates slightly from the AJPH study. We found that fatal police shootings in the years of 2015 & 2016 were not Poisson distributed after applying Pearson's Chi-Squared test to multiple models. By relaxing the mean = variance assumption and comparing to Negative Binomial models and a quasi-poisson model, we concluded a Negative Binomial model is a better fit for the dataset.
 
+To select the appropriate variables for the multivariate model, we calculated Spearman's $\rho$ correlation coefficients between all variables and the outcome Y as well as between variables to control for potential covariates. Our results and selection closely mirrored that of the AJPH study.
 
+Our Brady score coefficient is negative and statistically significant and can be interpreted as "for every additional Brady legislative point, there are 0.00418 less fatal police shootings per 1 million people per year" (`m_nb$coefficients[2]/2`).
+
+However more analysis should be completed to determine whether this decreased is caused by the increase in legislation, or the decrese in gun ownership. When adding gun ownership into both our Negative Binomial model and our calculations of absolute rate differences, we saw less of an effect from the Brady Scores. Sobel Mediation tests are one tool that can be used to observe this relationship.
