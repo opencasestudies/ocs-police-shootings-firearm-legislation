@@ -24,28 +24,29 @@ The packages used in this study are `dplyr`, `rvest`, `ggplot2`, `zoo`, `openint
 
 The learning objectives include data cleaning and manipulation, problem solving, scraping data from the web, cleaning text, merging data frames, Poisson regression and significance testing.
 
-Load libraries
-```{r}
-library(dplyr)
-library(ggplot2)
-```
-
 # What is the data?
 This study uses data from many different sources.
 
 1. [The Brady Campaign State Scorecard 2015](http://crimadvisor.com/data/Brady-State-Scorecard-2015.pdf): numerical scores for firearm legislation in each state.
 2. [The Counted](https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted): Persons killed by police in the US. The Counted project started because "the US government has no comprehensive record of the number of people killed by law enforcement."
 3. [US Census](https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html): Population characteristics by state.
-4. [FBI's Uniform Crime Report](https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5)
-5. [Unemployment rate data](https://www.bls.gov/lau/lastrk15.htm)
-6. [US Census 2010 Land Area](https://www.census.gov/support/USACdataDownloads.html#LND)
-7. Education data for 2010 via the [US Census education table editor](https://factfinder.census.gov/faces/tableservices/jsf/pages/productview.xhtml?src=bkmk).
+4. [FBI's Uniform Crime Report](https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5).
+5. [Unemployment rate data](https://www.bls.gov/lau/lastrk15.htm).
+6. [US Census 2010 Land Area](https://www.census.gov/support/USACdataDownloads.html#LND).
+7. Education data for 2010 via the [US Census education table. editor](https://factfinder.census.gov/faces/tableservices/jsf/pages/productview.xhtml?src=bkmk).
 8. "Household firearm owndership rates, represented as the percentage of firearm suicides to all suicides." Downloaded from the [CDC's Web-Based Injury Statistics Query and Reporting System](https://www.cdc.gov/injury/wisqars/fatal.html).
 
 # Data import
-We import the Census population characteristics data, Brady Campaign Scorecard (2015), The Counted data for the years of 2015 and 2016, the FBI's crime report for 2015, and land area by state from the Census. These files were downloaded from their respective websites listed in the above section "What is the data?"
+Since this is the first R code chunk, we load all the necessary libraries.
 ```{r}
+library(dplyr)
+library(ggplot2)
 library(readxl)
+```
+
+We import the Census population characteristics data, Brady Campaign Scorecard (2015), "The Counted" data for 2015 & 2016, FBI's crime report for 2015, land area by state from the Census, and suicide rate data. These files were downloaded from their respective websites listed in the above section "What is the data?"
+
+```{r}
 census <- read.csv("data/sc-est2017-alldata6.csv",nrows = 236900,stringsAsFactors = FALSE)
 head(census[, 1:5])
 brady <- read_excel("data/Brady-State-Scorecard-2015.xlsx", sheet = 1)
@@ -64,8 +65,8 @@ suicide_firearm <- read.csv("data/suicide_firearm.csv",stringsAsFactors = FALSE)
 
 
 # Data wrangling
-## 1. Census Data
-### Percent Male, White, Black, Hispanic
+## 1 Census Data
+### 1.1 Percent Male, White, Black, Hispanic
 
 The following is taken from the document sc-est2017-alldata6.pdf:
 
@@ -90,7 +91,7 @@ The following is taken from the document sc-est2017-alldata6.pdf:
 Here we use the `dplyr` package to `filter`, `group_by`, and `summarize` the data in order to calculate the necessary statistics.
 For each state, we add rows in the column `POPESTIMATE2015` since we are looking at the year 2015.
 Setting the `ORIGIN` or `SEX` equal to 0 ensures we don't add duplicate data, since 0 is the key for both Hispanic and non Hispanic residents and total male and female residents.
-We group by each state since all data in this study is at the state level.
+We group by each state since all data in this study should be at the state level.
 ```{r}
 
 census_stats <- census %>%
@@ -121,11 +122,10 @@ census_stats$NAME <- tolower(census_stats$NAME)
 
 head(census_stats)
 ```
-### Median Age
+### 1.2 Median Age
 First we need to get the total counts for each age (per state), since that's divided up into all the other categories.
-Set `ORIGIN` and `SEX` to "Total" so we don't have repeats in the data.
-Group by state and age since these are the two factors we need to keep seperated.
-The column sum_ages is the total residents in each specified state at each age year.
+We set `ORIGIN` and `SEX` to "Total" so we don't have repeats in the data then group by state and age since these are the two factors we need to keep seperated.
+The column `sum_ages` is the total residents in each specified state for each age.
 ```{r}
 age_stats <- census %>%
   filter(ORIGIN == 0,SEX == 0) %>%
@@ -133,16 +133,16 @@ age_stats <- census %>%
   summarize(sum_ages = sum(POPESTIMATE2015))
 head(age_stats)
 ```
-We begin to see that finding the median is tricky, since we don't have a nice list of ages (i.e., [22,55,4,27,...,35]) for each state, in which case we could simply use a built in R "median" function. Instead we have the number of people that are ages 0-85+ in each state. For example, the first row of data above says that in Alabama (in 2015), there are 59080 residents that are 0 years old.
+We begin to see that finding the median is tricky, since we don't have a nice list of ages (i.e., [22,55,4,27,...,35]) for each state, in which case we could probably use a built in R function. Instead we have the number of people that are ages 0-85+ in each state. For example, the first row of data above says that in Alabama (in 2015), there are 59080 residents that are 0 years old.
 
-First let us transform the matrix to have each state as a column name with the sumAges data underneath. I.e., right now we have a 51*86 by 3 dataframe, and instaed we want a 51 by 86 dataframe. I removed the age column since we can use the index instead (index minus 1, since R dataframes are indexed from 1 and the ages start at 0).
+To solve this problem we first transform the dataframe to have each state as a column name with the sumAges data underneath. In otherwords we want to transform our 51*86 by 3 dataframe to a 51 by 86 dataframe. We remove the age column since we can use the index instead (index minus 1, since R dataframes are indexed from 1 and the ages start at 0).
 ```{r}
 library(data.table)
 age_stats <- dcast(setDT(age_stats), AGE ~ NAME, value.var="sum_ages")
 age_stats$AGE <- NULL
 head(age_stats[,0:5])
 ```
-Now that we've made the data easier to work with, we need to find a way to get the median. One method is to take the cumulative sum of each column and then divide all the rows by the last row in each repective column, calculating a percentile/quantile for each age. Then, we need to find the age in each state where the population exceeds the 50th percentile (the median!) for the first time.
+Now that we've made the data easier to work with, we need to find a way to get the median. One method is to take the cumulative sum of each column and then divide all the rows by the last row in each repective column, calculating a percentile/quantile for each age. Then, we find the age in each state where the population exceeds the 50th percentile (the median!) for the first time.
 ```{r}
 age_stats <- as.data.frame(apply(age_stats, 2, cumsum))
 age_stats <- as.data.frame(apply(age_stats,2,function(x) x/x[86]))
@@ -155,12 +155,11 @@ head(census_stats)
 First print the names of the columns to see that there are some extraneous characters not visible in the dataframe. Use the column index to select columns instead of the complicated names.
 Also, we print a specified row of violent crime to observe the `X__1` group we are looking for -- `Rate per 100,000 inhabitants` (per the study.)
 ```{r}
-#library(dplyr)
 colnames(crime)
 violentcrime<- crime[ , c(1,3,5)]
 violentcrime[11, ]
 ```
-We need get all rows where `X__1 == Rate per 100,000 inhabitants`. However, as we can see above, the value for `State` in these rows is `<NA>`. We need to fill that value with the state name that is listed in a previous row.
+We need get all rows where `X__1 == Rate per 100,000 inhabitants`. However, as we can see above, the value for `State` in these rows is `<NA>`, so we need to fill that value with the state name that is listed in a previous row.
 Then we can select the rows where `X__1 == Rate per 100,000 inhabitants`.
 After that, we no longer need the column `X__1`, so we can remove it.
 ```{r}
@@ -173,19 +172,22 @@ names(violentcrime) <- c("State", "violent_crime")
 head(violentcrime)
 
 ```
-Looking at our whole dataframe we can see some of the state names have numbers in them (an example is printed below). This will make it hard to later merge this data together, so we should clean this up. We also make the state names all lowercase for ease of merging.
+Looking at our whole dataframe we can see some of the state names have numbers in them (an example is printed below). This will make it hard to merge data together, so we should clean this up. We also make the state names all lowercase for ease of merging.
 ```{r}
 violentcrime$State[20]
 violentcrime$State<-tolower(gsub('[0-9]+', '', violentcrime$State))
 violentcrime$State[20]
+```
+We start cumulating our data into one dataframe, p_df.
+```{r}
 p_df <- merge(census_stats,violentcrime,by.x="NAME", by.y = "State")
 head(p_df)
 ```
 
 ## 3. Brady Scores
-The study by AJPH groups the scores by the 7 categories. It is also important to note that the study removed all weightings of the different laws in favor of a "1 law 1 point" system, since the weightings were "somewhat arbitrary."
+The study by AJPH groups the scores by the 7 categories. The study removed all weightings of the different laws in favor of a "1 law 1 point" system, since the weightings were "somewhat arbitrary."
 
-For the purpose of practice and simplification (for now), let's just keep the first line of "total state points" from the Brady Scorecard.
+For the purpose of practice and simplification we just keep the first line of "total state points" from the Brady Scorecard as they are given, thus we note here is where our analysis differs from the study.
 
 We need to transform the data frame so that we have a column of state names and a column of the corresponding total scores.
 
@@ -197,9 +199,6 @@ brady <- brady %>%
   filter(Law == "TOTAL STATE POINTS")
 head(brady)
 brady <- brady[,(ncol(brady) - 49):ncol(brady)]
-```
-
-```{r}
 brady_totals <- as_data_frame(colnames(brady))
 brady_totals$brady_scores <- t(brady)
 colnames(brady_totals)[1] <- "state"
@@ -207,29 +206,28 @@ brady_totals$brady_scores <- as.numeric(brady_totals$brady_scores)
 head(brady_totals)
 ```
 
-In addition, this data frame's list of states is in two-letter state abbreviations. Since this is not cohesive with the previous datasets, we should change it to make merging dataframes easier later on. We use the `openintro` library to do the simple conversion.
+This dataframe's list of states is in two-letter state abbreviations. Since this is not cohesive with previous data files, we should change it to make merging possible. We use the `openintro` library to do the simple conversion.
 ```{r}
 library(openintro)
 brady_totals$state <-tolower(abbr2state(brady_totals$state))
 head(brady_totals)
-
 p_df <- merge(p_df,brady_totals,by.x="NAME",by.y = "state")
 head(p_df)
 ```
 
 ## 4. The Counted Fatal Shootings
-First we simply need to concatenate the two years of data.
+First we simply concatenate the two years of data.
 ```{r}
 counted1516 <- rbind(counted15, counted16)
 head(counted1516)
 ```
-Again, this data frame's list of states is in two-letter state abbreviations so let's change that and then merge with the rest of the data.
+Again, this data frame's list of states is in two-letter state abbreviations.
 ```{r}
 counted1516$state <-tolower(abbr2state(counted1516$state))
 ```
 In the study, researchers "calculated descriptive statistics for the proportion of victims that were male, armed, and non-White." Thus we repeat here easily with `dplyr`. `tally` is used to count the number of observations in each group.
 
-They also calculated the annualized rate per 1,000,000.
+We also calculate the annualized rate per 1,000,000 residents. Note that the tally is the total shootings per state over 2 years.
 ```{r}
 counted_stats <- counted1516 %>%
   group_by(state) %>%
@@ -243,16 +241,16 @@ counted_stats$gunshot_filtered <- counted1516 %>%
   pull(n)
 
 colnames(counted_stats)[2] <- "gunshot_tally"
-counted_stats$gunshot_rate <- (counted_stats$gunshot_tally/census_stats$total_pop)*1000000
+counted_stats$gunshot_rate <- (counted_stats$gunshot_tally/census_stats$total_pop)*1000000/2
 head(counted_stats)
 p_df <- merge(p_df,counted_stats,by.x="NAME",by.y = "state")
 ```
 ## 5. Unemployment Data
-This data is available online from the BLS, but there is no easy download of the table. It is also difficult to simply copy and paste; it doesn't hold it's table format. Thus, let's set up a web scraper to get the data.
+This data is available online from the BLS, but there is no easy download of the table. It is also difficult to simply copy and paste; it doesn't hold it's table format. Thus we set up a web scraper to get the data.
 
 To do this, we must use the `rvest` package. To view the HTML of a webpage, right-click and select "View page source."
 
-Then we need to get the values from each column of the data table. `html_nodes` acts as a CSS selector. The sub0 class returns the state names, and the datavalue class corresponds to the values of both columns, Unemployment Rank and Rate. Since there is no differentiation of the two columns, and our "datavalues" alternate, we select subsets of this column to be the two seperate columns "rank" and "rate."
+Then we get the values from each column of the data table. `html_nodes` acts as a CSS selector. The sub0 class returns the state names, and the datavalue class corresponds to the values of both columns, Unemployment Rank and Rate. Since there is no differentiation of the two columns, and our "datavalues" alternate, we select subsets of this column to be the two seperate columns "rank" and "rate."
 ```{r}
 library(rvest)
 url <- read_html("https://www.bls.gov/lau/lastrk15.htm")
@@ -281,7 +279,7 @@ p_df <- merge(p_df,unemployment,by.x="NAME",by.y = "state")
 ```
 
 ## 6. Population Density 2015
-To manually find population density, we can calculate total 2015 population from the Census data and import land area to calculate population density. This is caculated because "good"" data for state population in 2015 was not available in a downloadable format and/or was not easy to scrape.
+To manually find population density, we can calculate total 2015 population from the Census data and import land area to calculate population density. This is caculated because "good" data for state population in 2015 was not available in a downloadable format and/or was not easy to scrape.
 
 I select `LND110210D` because I looked at the data table at https://www.census.gov/geo/reference/state-area.html and compared values to find the correct column. This one corresponds to land area in square miles.
 ```{r}
@@ -296,9 +294,9 @@ landSqMi <- land %>%
 
 head(landSqMi)
 ```
-Since `landSqMi` gives us area for each town, merge on the state names to obtain only the area for each state.
+Since `landSqMi` gives us area for each town in addition to the states, we merge on the state names to obtain only the area for each state.
 
-Convert the state names to be all lowercase since the row values must match to merge successfully.
+We convert the state names to be all lowercase since the row values must match to merge successfully.
 ```{r}
 names(landSqMi) <- c("NAME", "land_area")
 
@@ -317,18 +315,19 @@ p_df <- merge(p_df,popdensity,by="NAME")
 ```
 
 ## 8. Firearm Ownership
-Calculate firearm ownership as a percent of firearm suicides to all suicides.
+We simply calculate firearm ownership as a percent of firearm suicides to all suicides.
 ```{r}
 ownership_df <- data.frame("NAME" = tolower(suicide_all$State), 
                            "ownership" = suicide_firearm$Deaths/suicide_all$Deaths*100)
+head(ownership_df)
 p_df <- merge(p_df,ownership_df,by="NAME")
 ```
 
 # Exploratory data analysis
-## Poisson fit
-First let's determine if the fatal police shooting data is Poisson distributed. This is possible because the shootings are discrete events over a fixed interval of time or space.
+## 1. Poisson fit
+First let's determine if the fatal police shooting data is Poisson distributed. This is possible because the shootings are discrete events over a fixed interval of time.
 
-We take the mean of the fatal shootings to get our parameter $\lambda$. This is the expected value of fatal police shootings in each state for the years 2015-16. It is also the variance.
+We take the mean of the fatal shootings to get our parameter $\lambda$. $\lambda$ is the expected value *and variance* of fatal police shootings in each state for the years 2015-16 if they are Poisson distributed.
 ```{r}
 p_df$ones <- 1
 (lambda = mean(p_df$gunshot_tally))
@@ -339,8 +338,6 @@ expected <- lambda*p_df$ones
 Now that we've calculated the expected number of shootings, we can use Pearson's chi-squared test (goodness of fit) to see if the data does indeed follow a Poisson distribution. Our test statistic is
 $$\chi^2 = \sum_{i=1}^{n} \frac{(O_{i} - E{i})^{2}}{E_{i}}$$
 where $O_{i}$ denotes the observed value in state $i$ and $E_{i}$ denotes the expected value in state $i$ if the data is Poisson distributed.
-
-Here's [a helpful link](https://chemicalstatistician.wordpress.com/2013/04/14/checking-the-goodness-of-fit-of-the-poisson-distribution-for-alpha-decay-by-americium-241/).
 ```{r}
 chi.squared = (p_df$gunshot_tally - expected)^2/expected
 (chi.squared.statistic = sum(chi.squared))
@@ -379,7 +376,6 @@ mv <- glm(gunshot_tally ~  brady_scores +
             male + 
             age + 
             violent_crime +
-            ownership + 
             offset(log(total_pop)), 
           family="poisson", data = p_df)
 
@@ -411,7 +407,7 @@ summary(m_nb <- glm.nb(gunshot_tally ~ brady_scores +
 ```
 We observe that the standard errors increase for the negative binomial.
 
-We will do the equivalent test of a Likelihood Ratio Test comparing the Poisson model to the negative binomial model to see if the relaxation of the mean=variance assumption is better.
+We do the equivalent test of a Likelihood Ratio Test comparing the Poisson model to the negative binomial model to see if the relaxation of the mean=variance assumption is better.
 ```{r}
 LRTstat = 2 * (logLik(m_nb) - logLik(m1))
 df = 1
@@ -419,12 +415,6 @@ pval = pval = 1-pchisq(LRTstat, df)
 paste0("LRT test statistic = ", round(LRTstat,2), ", df = ", df, ", p-value = ", pval)
 ```
 Our test statistic is large and our p-value small (rounds to 0), indicating that we should reject the null hypothesis and conclude that a negative binomial model is better than Poisson.
-
-```{r}
-(est <- cbind(Estimate = coef(m_nb), confint(m_nb)))
-exp(est)
-```
-
 
 We can also look at a quasi-poisson model, which retains the Poisson distibution assumption but removes the mean=variance assumption.
 ```{r}
@@ -436,18 +426,50 @@ We see in these results that our brady coefficient is no longer significant, and
 
 Thus we continue our analysis using the negative binomial regression model.
 
-# Data analysis
-## Negative Binomial regression
+## 2. Selection of variables
+In the study, "We employed a 2-step approach used in previous firearm research to select covariates for the adjusted regression models.First, we identified variables correlated (Spearman’s r) with the outcome at 0.300 or greater. Then, to address concerns with collinearity, we excluded those covariates that were highly correlated with other covariates."
 
-$$\mu = t\exp{\beta_{0}}\exp{\beta_{1}X}$$
-$$\frac{\mu}{t} = \exp{\beta_{0}}\exp{\beta_{1}X}$$
-
-Here we plot the results of our negative binomial regresson on the reduced model.
+Thus we calculate Spearman's $\rho$ for the fatal police shooting rate in each state with all other relevant variables.
+NOTE TO SELF: ROUND NUMBERS PRINTED
 ```{r}
-#require(ggplot2)
+for(col in c(2,3,4,5,7,8,13,15,16)){
+    corr <- cor.test(x=p_df[,12], y=p_df[,col], method = 'spearman',exact=FALSE)
+    print(paste0(colnames(p_df)[col], " correlation with fatal shooting rate: " , corr$estimate))
+  }
+```
+We see that the data for percent of white residents, percent of black residents, percent of hispanic residents, and unemployment rate do not have a correlation stronger than 0.3 (or -0.3). We leave variables these out of the rest of our analysis.
+
+Now let's look at potential covariates by finding the correlation between each of the remaining variables.
+```{r}
+for(col1 in c(5,7,8,15,16)){
+  for(col2 in c(5,7,8,15,16)){
+    if(col1!=col2){
+    corr <- cor.test(x=p_df[,col1], y=p_df[,col2], method = 'spearman',exact=FALSE)
+      if(corr$estimate>= 0.3 | corr$estimate <= -.3){
+        print(paste0(colnames(p_df)[col1], " correlation with ", colnames(p_df)[col2], ": ",corr$estimate))
+      }
+    }
+  }
+}
+```
+It seems as though median age & percentage of male residents, median age & population density, and gun ownership & population density are all highly correlated. Thus, we keep age and gun ownership to be consistent with the study.
+
+The study also kept the violent crime rate data, which we see has a high correlation with the fatal police shooting rate and does not have a high correlation with the other variables so we will include this in our multivariate model as well.
+
+# Data analysis
+## 1. Negative Binomial regression
+
+For both Negative Binomial regression and Poisson regression, our data must be discrete. However we want to incorporate year and population into our fatal police shooting data to find the annualized rate per 1 million residents.
+
+The Negative Binomial and Poisson regression model with rate $t$ have the same regression equation,
+$$\ln{\frac{\mu}{t}} = \beta_{0} + \beta_{1}X \implies \mu = te^{\beta_{0}}e^{\beta_{1}X}$$
+where $\mu$ is the mean of $Y$, $X$ is our given predictor variable (in our simple model `m1` case, the Brady scores) and $\beta_{0}$ and $\beta_{1}$ are our parameters to be estimated.
+
+To do this in R, as we have included in the models in the Exploratory data analysis section, adding `+ offset(log(total_pop))` includes our rate $t$.
+
+We plot the results of our negative binomial regresson on the reduced model `m1`.
+```{r}
 library(ggrepel)
-#require(sandwich)
-#require(msm)
 
 df1 <- data.frame("resultY" = 
                   exp(m_nb$coefficients[1])*exp(m_nb$coefficients[2]*p_df$brady_scores)*1000000/2,
@@ -469,45 +491,42 @@ plt
 (plt <- plt +  geom_text_repel(aes(y = rates,label=abr)))
 
 ```
-We analyze the multivariate negative binomial model.
+
+Next we analyze the multivariate negative binomial model.
 ```{r}
 mv_nb <- glm.nb(gunshot_tally ~  brady_scores + 
-            white + 
-            black + 
-            hispanic + 
-            male + 
             age + 
             violent_crime +
+            ownership +
             offset(log(total_pop)),
             data = p_df)
 summary(mv_nb)
 ```
 
-## Absolute Rate Differences
-We group the states into 4 quartiles and then calculate absolute rates, the mean annualized rate of fatal police shootings per 1,000,000. Then we find absolute rate differences between the first group of states (with the fewest/weakest firearm laws) compared to the other 3 groups. Finally we calculate confidence intervals and point estimates for the incidence rate ratios (IRR), where we again compare the 1st group of states to the other 3 groups.
+## 2. Absolute Rate Differences
+We group the states into 4 quartiles and calculate absolute rates or the mean annualized rate of fatal police shootings per 1,000,000. Then we find absolute rate differences between the first group of states (with the fewest/weakest firearm laws) compared to the other 3 groups. Finally we calculate confidence intervals and point estimates for the incidence rate ratios (IRR), where we again compare the 1st group of states to the other 3 groups.
 
-http://sphweb.bumc.bu.edu/otlt/MPH-Modules/QuantCore/PH717_ComparingFrequencies/PH717_ComparingFrequencies9.html
+We calculate everything from scratch: the mean rates and shooting counts, the rate differences and ratios, the standard error of the log(IRR) `std`, and lastly the confidence intervals.
+
+Note that the standard error is calculated from the count data, not the rate data. Suppose $a$ is the mean number of shootings in the first quartile and $b$ is the mean number of shootings in the second, third, or fourth quartile. Then the standard error is calculated by $$SE = \sqrt{\frac{1}{a} + \frac{1}{b}}$$
+
+On the natural log scale, the lower and upper bounds of the 95% confidence interval are found with $$log(IRR) \pm [1.96\times{SE}]$$ which we exponentiate to get the final interval for the IRR.
 ```{r}
 library(kableExtra)
-#df1$count <- p_df$gunshot_tally
 df1<-p_df[order(p_df$brady),]
-head(df1)
 table2<-data.frame("brady" = c(1:4), 
-                   "mean_rates" = c(mean(df1$gunshot_rate[1:12])/2,
-                                    mean(df1$gunshot_rate[13:25])/2,
-                                    mean(df1$gunshot_rate[26:38])/2,
-                                    mean(df1$gunshot_rate[39:50])/2))
+                   "mean_rates" = c(mean(df1$gunshot_rate[1:12]),
+                                    mean(df1$gunshot_rate[13:25]),
+                                    mean(df1$gunshot_rate[26:38]),
+                                    mean(df1$gunshot_rate[39:50])))
 
-table2$count_quartiles <- c(mean(df1$gunshot_tally[1:12])/2,
-                                    mean(df1$gunshot_tally[13:25])/2,
-                                    mean(df1$gunshot_tally[26:38])/2,
-                                    mean(df1$gunshot_tally[39:50])/2)
+table2$count_quartiles <- c(mean(df1$gunshot_tally[1:12]),
+                                    mean(df1$gunshot_tally[13:25]),
+                                    mean(df1$gunshot_tally[26:38]),
+                                    mean(df1$gunshot_tally[39:50]))
 
-
-table2
 table2$rate_diff <- abs(table2$mean_rates - table2$mean_rates[1])
 table2$rate_ratio <- table2$mean_rates/table2$mean_rates[1]
-
 
 table2$CI.L <-0
 table2$CI.U <-0
@@ -535,48 +554,50 @@ table2 %>%
   add_header_above(c(" " = 3, "Unadjusted" = 3))
 
 ```
+
+Next we look at the incidence rate ratios when including our age, gun ownership, and violent crime variables.
 ```{r}
-# test_df <- c(mean(df1$total_pop[1:12])/2,
-#                                     mean(df1$total_pop[13:25])/2,
-#                                     mean(df1$total_pop[26:38])/2,
-#                                     mean(df1$total_pop[39:50])/2)
-# 
-# test_df = t(test_df)
-# test_df2 = as.data.frame(t(table2$mean_rates))
-# test_df2
-# mv_nb <- glm.nb(. ~  1 +
-#             offset(log(group_pop)),
-#             data = test_df2)
+table2$mean_age <- c(mean(df1$age[1:12]),
+                                    mean(df1$age[13:25]),
+                                    mean(df1$age[26:38]),
+                                    mean(df1$age[39:50]))
+table2$mean_ownership <- c(mean(df1$ownership[1:12]),
+                                    mean(df1$ownership[13:25]),
+                                    mean(df1$ownership[26:38]),
+                                    mean(df1$ownership[39:50]))
+table2$mean_crime <- c(mean(df1$violent_crime[1:12]),
+                                    mean(df1$violent_crime[13:25]),
+                                    mean(df1$violent_crime[26:38]),
+                                    mean(df1$violent_crime[39:50]))
+
+table2$multivariate_IRR <- (table2$mean_rates/(table2$mean_age*table2$mean_crime))/(table2$mean_rates[1]/(table2$mean_age[1]*table2$mean_crime[1]))
+table2$multivariate_IRR
+
+table2$multivariate_IRR <- (table2$mean_rates/(table2$mean_age*table2$mean_ownership*table2$mean_crime))/(table2$mean_rates[1]/(table2$mean_age[1]*table2$mean_ownership[1]*table2$mean_crime[1]))
+table2$multivariate_IRR
 ```
+Interestingly, when we add gun ownership the incidence rates are much closer to 1 indicating that the brady scores have less of an effect on fatal police shooting rates when we include gun ownership rates.
 
-## Correlation Analysis
-Spearman $\rho$ for Fatal Police Shooting Rate
-```{r}
-corr <- cor.test(x=p_df$gunshot_rate, y=p_df$ownership, method = 'spearman')
-corr
-```
+Note that another way to calculate incidence rate ratios is to simply exponentiate a model's coefficients and confidence intevals. To do this, one would have to make each quartile a variable $X_{1},...X_{4}$.
 
-
-
-
-
-## Sobel Test
+## 3. Sobel-Goodman mediation test
+We just observed that adding gun ownership rates had a large effect on our incidence rate ratios. Because of this, we will consider performing a Sobel test to see if gun ownership is a mediating factor. To understand this relationship, a helpful graphic (from [Wikepedia](https://en.wikipedia.org/wiki/Sobel_test)) is shown below
+<center>
+![](data/Basic_Mediation_Diagram.png)
+</center>
+(graphic ) where X is the Brady scores and other variables, Y is the fatal shooting rate, and M is the mediating factor gun ownership.
 
 ```{r}
 library(mediation)
 
-med.fit <- lm(ownership ~ brady_scores + white + black + hispanic + male + age, data = p_df)
-out.fit <- glm(gunshot_tally ~ ownership + white + black + hispanic + male + age +
-                 brady_scores + 
-                 offset(log(total_pop)), 
+med.fit <- lm(ownership ~ brady_scores + age + violent_crime, data = p_df)
+out.fit <- glm(gunshot_tally ~ ownership + brady_scores + age  + violent_crime + offset(log(total_pop)), 
                 family="poisson", data = p_df)
 med.out <- mediate(med.fit, out.fit, treat = "brady_scores", mediator = "ownership",
                    robustSE = TRUE, sims = 100)
 
 summary(med.out)
 ```
-
-
 
 # Summary of results
 
