@@ -18,6 +18,12 @@ knitr::opts_chunk$set(echo = TRUE)
 # Motivation
 We will recreate a study by the American Journal of Public Health ["to examine whether stricter firearm legislation is associated with rates of fatal police shootings."](https://ajph.aphapublications.org/doi/suppl/10.2105/AJPH.2017.303770)
 
+<center>
+![](data/Final_Plot.png)
+
+
+
+
 The bulk of this code will consist of collecting, cleaning and manipulating data in order to control for potential covariates. We will also run a Poisson regression and tests of statistical significance.
 
 The libraries used in this study are `dplyr`, `rvest`, `ggplot2`, `zoo`, `openintro`, `readxl`, `data.table`, `mediation`, `MASS`,`ggrepel`, and `kableExtra`. In order to run this code please ensure you have these packages installed.
@@ -38,10 +44,16 @@ This study uses data from many different sources.
 
 # Data import
 Since this is the first R code chunk, we load all the necessary libraries.
-```{r}
+```{r, message=FALSE}
 library(dplyr)
 library(ggplot2)
 library(readxl)
+library(data.table)
+library(zoo)
+library(openintro)
+library(rvest)
+library(kableExtra)
+library(mediation)
 ```
 
 We import the Census population characteristics data, Brady Campaign Scorecard (2015), "The Counted" data for 2015 & 2016, FBI's crime report for 2015, land area by state from the Census, and suicide rate data. These files were downloaded from their respective websites listed in the above section "What is the data?"
@@ -65,7 +77,7 @@ suicide_firearm <- read.csv("data/suicide_firearm.csv",stringsAsFactors = FALSE)
 
 
 # Data wrangling
-## 1 Census Data
+## 1. Census Data
 ### 1.1 Percent Male, White, Black, Hispanic
 
 The following is taken from the document sc-est2017-alldata6.pdf:
@@ -137,7 +149,6 @@ We begin to see that finding the median is tricky, since we don't have a nice li
 
 To solve this problem we first transform the dataframe to have each state as a column name with the sumAges data underneath. In otherwords we want to transform our 51*86 by 3 dataframe to a 51 by 86 dataframe. We remove the age column since we can use the index instead (index minus 1, since R dataframes are indexed from 1 and the ages start at 0).
 ```{r}
-library(data.table)
 age_stats <- dcast(setDT(age_stats), AGE ~ NAME, value.var="sum_ages")
 age_stats$AGE <- NULL
 head(age_stats[,0:5])
@@ -163,7 +174,6 @@ We need get all rows where `X__1 == Rate per 100,000 inhabitants`. However, as w
 Then we can select the rows where `X__1 == Rate per 100,000 inhabitants`.
 After that, we no longer need the column `X__1`, so we can remove it.
 ```{r}
-library(zoo)
 violentcrime$State <- na.locf(violentcrime$State)
 violentcrime[11, ]
 violentcrime<- subset(violentcrime, X__1 == "Rate per 100,000 inhabitants")
@@ -208,7 +218,6 @@ head(brady_totals)
 
 This dataframe's list of states is in two-letter state abbreviations. Since this is not cohesive with previous data files, we should change it to make merging possible. We use the `openintro` library to do the simple conversion.
 ```{r}
-library(openintro)
 brady_totals$state <-tolower(abbr2state(brady_totals$state))
 head(brady_totals)
 p_df <- merge(p_df,brady_totals,by.x="NAME",by.y = "state")
@@ -252,7 +261,6 @@ To do this, we must use the `rvest` package. To view the HTML of a webpage, righ
 
 Then we get the values from each column of the data table. `html_nodes` acts as a CSS selector. The sub0 class returns the state names, and the datavalue class corresponds to the values of both columns, Unemployment Rank and Rate. Since there is no differentiation of the two columns, and our "datavalues" alternate, we select subsets of this column to be the two seperate columns "rank" and "rate."
 ```{r}
-library(rvest)
 url <- read_html("https://www.bls.gov/lau/lastrk15.htm")
 datavalues <- url%>%
   html_nodes('.datavalue') %>%
@@ -283,14 +291,14 @@ To manually find population density, we can calculate total 2015 population from
 
 We select `LND110210D` by looking at the [table](https://www.census.gov/geo/reference/state-area.html) and comparing values on other sites (such as the census or Wikipedia) to find the correct column. This column corresponds to land area in square miles.
 ```{r}
-library(dplyr)
 totalPop <- census %>%
   filter(ORIGIN == 0, SEX == 0 ) %>%
   group_by(NAME) %>%
   summarize(total = sum(POPESTIMATE2015))
 
 landSqMi <- land %>%
-  select(Areaname,LND110210D)
+  dplyr::select(Areaname,LND110210D) 
+  # add the dplyr::select because there exists MASS::select
 
 head(landSqMi)
 ```
@@ -395,9 +403,17 @@ qplot(p_df$gunshot_tally,geom="histogram", binwidth = 1) +
 
 We observe that the data is quite skewed and does not fall tightly under the curve which may be contributing to the high values of our Pearson's chi-squared test statistic.
 
+Next we create a qqplot to again see is the data deviates from a Poisson distribution. A "good" qqplot would look like a relatively straight diagonal line of data points, showing that the data matches the distribution.
+```{r}
+distribution <- dpois(p_df$gunshot_tally, lambda = lambda)
+
+qqplot(p_df$gunshot_tally, distribution, main = "Poisson QQPlot", xlab = "Gunshot Tally Data", ylab = "Poisson distribution")
+```
+
+
 Let us consider using a negative binomial to account for *overdispersion*, when the varaiance of the data is larger than the mean. Poisson models assume that the mean equals the variance, hence our model summary states "Dispersion parameter for Poisson family taken to be 1."
 
-```{r}
+```{r, message=FALSE}
 library(MASS)
 
 summary(m1)
@@ -493,6 +509,10 @@ plt
 
 ```
 
+```{r, message=FALSE}
+#ggsave("data/Final_Plot.png", plot = last_plot(), device = "png")
+```
+
 Next we analyze the multivariate negative binomial model.
 ```{r}
 mv_nb <- glm.nb(gunshot_tally ~  brady_scores + 
@@ -513,7 +533,6 @@ Note that the standard error is calculated from the count data, not the rate dat
 
 On the natural log scale, the lower and upper bounds of the 95% confidence interval are found with $$log(IRR) \pm [1.96\times{SE}]$$ which we exponentiate to get the final interval for the IRR.
 ```{r}
-library(kableExtra)
 df1<-p_df[order(p_df$brady),]
 table2<-data.frame("brady" = c(1:4), 
                    "mean_rates" = c(mean(df1$gunshot_rate[1:12]),
@@ -594,8 +613,6 @@ More information on this R package can be viewed [here](https://cran.r-project.o
 
 Negative binomial models are not permitted mediator model types for this R package so we use Poisson instead.
 ```{r}
-library(mediation)
-
 med.fit <- lm(ownership ~ brady_scores, data = p_df)
 out.fit <- glm(gunshot_tally ~ ownership + brady_scores + offset(log(total_pop)), 
                 family="poisson", data = p_df)
