@@ -20,7 +20,7 @@ We will recreate a study by the American Journal of Public Health ["to examine w
 
 <center>
 ![](data/Final_Plot.png)
-
+</center>
 
 
 
