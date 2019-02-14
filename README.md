@@ -1,7 +1,13 @@
 # OpenCaseStudies
 
+### License 
+
 This case study is part of the [OpenCaseStudies]() project. This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 ([CC BY-NC 3.0](https://creativecommons.org/licenses/by-nc/3.0/us/)) United States License.
 
+### Citation 
+
+To cite this case study, please use: 
+[![DOI](https://zenodo.org/badge/151612152.svg)](https://zenodo.org/badge/latestdoi/151612152)
 
 ### Title
 
