@@ -8,7 +8,7 @@ This case study is part of the [OpenCaseStudies]() project. This work is license
 
 To cite this case study: 
 
-Stephens, Alexandra, Jager, Leah, Taub, Margaret, & Hicks, Stephanie. (2019, February 14). opencasestudies/ocs-police-shootings-firearm-legislation: Firearm Legislation and Fatal Police Shootings in the United States (Version v1.0.0). Zenodo. http://doi.org/10.5281/zenodo.2565249
+Stephens, Alexandra and Jager, Leah and Taub, Margaret and Hicks, Stephanie. (2019, February 14). opencasestudies/ocs-police-shootings-firearm-legislation: Firearm Legislation and Fatal Police Shootings in the United States (Version v1.0.0). Zenodo. http://doi.org/10.5281/zenodo.2565249
 
 [![DOI](https://zenodo.org/badge/151612152.svg)](https://zenodo.org/badge/latestdoi/151612152)
 
