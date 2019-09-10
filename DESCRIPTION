@@ -18,7 +18,7 @@ Imports:
     zoo,
     openintro,
     rvest,
-    kabelExtra,
+    kableExtra,
     mediation,
     MASS,
     ggrepel
