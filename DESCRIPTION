@@ -1,0 +1,26 @@
+Description: This is a Description.
+License: GPL-3
+Authors@R: person(given = "Just",
+           family = "Placeholder",
+           email = "blah@gmail.com")
+Package: ocs.police.shooting.firearm.legislation
+Type: package
+Title: Open Case Studies
+Version: 0.0.1
+Depends: R (>= 3.4.0)
+Imports: 
+    dplyr,
+    ggplot2,
+    rmarkdown,
+    knitr,
+    readxl,
+    data.table,
+    zoo,
+    openintro,
+    rvest,
+    kabelExtra,
+    mediation,
+    MASS,
+    ggrepel
+    
+VignetteBuilder: knitr
