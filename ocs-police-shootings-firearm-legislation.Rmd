@@ -68,6 +68,7 @@ counted16 <- read.csv("data/the-counted-2016.csv",stringsAsFactors = FALSE)
 head(counted15)
 crime <- read_excel("data/table_5_crime_in_the_united_states_by_state_2015.xls", sheet = 1,skip = 3)
 head(crime[, 1:5])
+colnames(crime)[3]<-"rate_stat"
 land <- read_excel("data/LND01.xls", sheet = 1)
 head(land[, 1:5])
 suicide_all <- read.csv("data/suicide_all.csv",stringsAsFactors = FALSE)
@@ -170,14 +171,14 @@ colnames(crime)
 violentcrime<- crime[ , c(1,3,5)]
 violentcrime[11, ]
 ```
-We need get all rows where `X__1 == Rate per 100,000 inhabitants`. However, as we can see above, the value for `State` in these rows is `<NA>`, so we need to fill that value with the state name that is listed in a previous row.
-Then we can select the rows where `X__1 == Rate per 100,000 inhabitants`.
-After that, we no longer need the column `X__1`, so we can remove it.
+We need get all rows where `rate_stat == Rate per 100,000 inhabitants`. However, as we can see above, the value for `State` in these rows is `<NA>`, so we need to fill that value with the state name that is listed in a previous row.
+Then we can select the rows where `rate_stat == Rate per 100,000 inhabitants`.
+After that, we no longer need the column `rate_stat`, so we can remove it.
 ```{r}
 violentcrime$State <- na.locf(violentcrime$State)
 violentcrime[11, ]
-violentcrime<- subset(violentcrime, X__1 == "Rate per 100,000 inhabitants")
-violentcrime$X__1 <- NULL
+violentcrime<- subset(violentcrime, rate_stat == "Rate per 100,000 inhabitants")
+violentcrime$rate_stat <- NULL
 names(violentcrime) <- c("State", "violent_crime")
 head(violentcrime)
 
