@@ -3,6 +3,7 @@ title: "Firearm Legislation and Fatal Police Shootings in the US"
 author: "Alexandra Stephens"
 output:
   html_document:
+    code_download: true
     highlight: tango
     number_sections: no
     theme: cosmo
