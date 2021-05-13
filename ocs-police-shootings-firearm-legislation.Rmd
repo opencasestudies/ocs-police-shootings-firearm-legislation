@@ -38,7 +38,7 @@ This study uses data from many different sources.
 2. [The Counted](https://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted): Persons killed by police in the US. The Counted project started because "the US government has no comprehensive record of the number of people killed by law enforcement."
 3. [US Census](https://www.census.gov/content/census/en/data/tables/2017/demo/popest/state-detail.html): Population characteristics by state.
 4. [FBI's Uniform Crime Report](https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-5).
-5. [Unemployment rate data](https://www.bls.gov/lau/lastrk15.htm).
+5. [Unemployment rate data](https://web.archive.org/web/20210205040250/https://www.bls.gov/lau/lastrk15.htm).
 6. [US Census 2010 Land Area](https://www.census.gov/support/USACdataDownloads.html#LND).
 7. Education data for 2010 via the [US Census education table. editor](https://factfinder.census.gov/faces/tableservices/jsf/pages/productview.xhtml?src=bkmk).
 8. "Household firearm owndership rates, represented as the percentage of firearm suicides to all suicides." Downloaded from the [CDC's Web-Based Injury Statistics Query and Reporting System](https://www.cdc.gov/injury/wisqars/fatal.html).
@@ -256,14 +256,17 @@ counted_stats$gunshot_rate <- (counted_stats$gunshot_tally/census_stats$total_po
 head(counted_stats)
 p_df <- merge(p_df,counted_stats,by.x="NAME",by.y = "state")
 ```
+
 ## 5. Unemployment Data
-This data is available online from the BLS, but there is no easy download of the table. It is also difficult to simply copy and paste; it doesn't hold it's table format. Thus we set up a web scraper to get the data.
+
+This data was available online from the BLS (although since the time that this case study was written, the data is no longer available directly on the US Bureau of Labor Statistics website - hence we will use an archive), but there was no easy download of the table. It is also difficult to simply copy and paste; it doesn't hold it's table format. Thus we set up a web scraper to get the data.
 
 To do this, we must use the `rvest` package. To view the HTML of a webpage, right-click and select "View page source."
 
 Then we get the values from each column of the data table. `html_nodes` acts as a CSS selector. The sub0 class returns the state names, and the datavalue class corresponds to the values of both columns, Unemployment Rank and Rate. Since there is no differentiation of the two columns, and our "datavalues" alternate, we select subsets of this column to be the two seperate columns "rank" and "rate."
+
 ```{r}
-url <- read_html("https://www.bls.gov/lau/lastrk15.htm")
+url <- read_html("https://web.archive.org/web/20210205040250/https://www.bls.gov/lau/lastrk15.htm")
 datavalues <- url%>%
   html_nodes('.datavalue') %>%
   html_text() %>%
